@@ -14,7 +14,8 @@ commands = {
 }
 
 
-def parse_command(text: str) -> tuple[str, Error]:
+def parse_command(words: list[str]) -> tuple[str, Error]:
+    text: str = " ".join(words)
     if commands.get(text) is None:
         return "", generate_invalid_command_err(text)
     return cast(str, commands.get(text)), empty_err
