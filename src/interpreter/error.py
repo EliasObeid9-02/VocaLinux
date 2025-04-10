@@ -31,3 +31,10 @@ def generate_escaped_non_keyword_err(word: str) -> Error:
         error_message="Tried to escape non keyword.",
         internal_error=f"The provided word (%s) is not a keyword" % word,
     )
+
+
+def generate_invalid_short_option_err(word: str) -> Error:
+    return Error(
+        error_message="Provided option is not a letter.",
+        internal_error=f"The provided word (%s) is not a letter" % word,
+    )
