@@ -24,3 +24,10 @@ def generate_invalid_command_err(text: str) -> Error:
         internal_error=f"The provided text (%s) is not in the list of supported commands"
         % text,
     )
+
+
+def generate_escaped_non_keyword_err(word: str) -> Error:
+    return Error(
+        error_message="Tried to escape non keyword.",
+        internal_error=f"The provided word (%s) is not a keyword" % word,
+    )
