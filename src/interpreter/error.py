@@ -38,3 +38,10 @@ def generate_invalid_short_option_err(word: str) -> Error:
         error_message="Provided option is not a letter.",
         internal_error=f"The provided word (%s) is not a letter" % word,
     )
+
+
+def generate_invalid_section_err(type: str) -> Error:
+    return Error(
+        error_message="Provided section keyword is invalid.",
+        internal_error=f"The provided keyword (%s) is not a valid section type" % type,
+    )
