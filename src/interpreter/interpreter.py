@@ -1,4 +1,6 @@
+import json
 import subprocess
+from pathlib import Path
 
 from interpreter.error import Error, empty_err, generate_invalid_section_err
 from interpreter.parse_argument import parse_argument
@@ -32,10 +34,25 @@ class Command:
         self.arguments.append(argument)
 
     def validate_command(self):
-        is_valid = True
-        # TODO: implement validation method
+        # TODO: write commands.json file
 
-        self.is_valid = is_valid
+        self.is_valid = True
+        path: Path = Path(__file__).parent / "data" / "commands.json"
+        with open(path) as f:
+            data: dict = json.load(f)
+        command_data: dict = data[self.command]
+
+        # validating short options:
+        for option in self.short_options:
+            self.is_valid &= option in command_data["short-options"]
+
+        # validating captial options
+        for option in self.captial_options:
+            self.is_valid &= option in command_data["capital-options"]
+
+        # validating long options
+        for option in self.long_options:
+            self.is_valid &= option in command_data["long-options"]
 
     def execute_command(self):
         if self.is_valid is None or not self.is_valid:
