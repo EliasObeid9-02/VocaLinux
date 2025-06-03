@@ -11,7 +11,7 @@ class CFG:
     num_output = 50
     max_length = 500
 
-    batch_size = 16  # number of samples processed
+    batch_size = 4  # number of samples processed
     worker = os.cpu_count()  # 16
     num_channels = 100  # 80
 
