@@ -6,7 +6,7 @@ from spec_augment.image_wrap import sparse_image_warp
 
 class SpecAugment:
     """
-    A simple data aumentation method applied to directly to feature inputs
+    A simple data augmentation method applied to directly to feature inputs
     of a neural network
     it is used in speech recognition tasks to add noise to voice recordings
     """
