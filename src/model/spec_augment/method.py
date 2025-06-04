@@ -1,7 +1,10 @@
 import random
+from typing import Literal
 
 import numpy as np
-from spec_augment.image_wrap import sparse_image_warp
+import torch
+
+PolicyType = Literal["LB", "LD", "SM", "SS"]
 
 
 class SpecAugment:
@@ -9,29 +12,31 @@ class SpecAugment:
     A simple data augmentation method applied to directly to feature inputs
     of a neural network
     it is used in speech recognition tasks to add noise to voice recordings
+
+    Reference: https://arxiv.org/abs/1904.08779
     """
 
-    def __init__(self, policy, zero_mean_normalized=True):
+    def __init__(self, policy: PolicyType, zero_mean_normalized: bool = True) -> None:
         """
-        policy: one of the following
-        'LB' (LibriSpeech basic)
-        'LD' (LibriSpeech double)
-        'SM' (Switchboard mild)
-        'SS' (Switchboard strong)
-        zero_mean_normalized: optional parameter to normalize features
-        """
-        self.policy = policy
-        self.zero_mean_normalized = zero_mean_normalized
+        Initialize SpecAugment with a given policy.
 
+        Args:
+            policy: Augmentation policy, one of:
+                - 'LB' (LibriSpeech basic)
+                - 'LD' (LibriSpeech double)
+                - 'SM' (Switchboard mild)
+                - 'SS' (Switchboard strong)
+            zero_mean_normalized: Whether input features are zero-mean normalized
         """
-        Policy Specific Parameters
-        W:   time warp
-        F:   frequency mask max size
-        m_F: number of frequency masks
-        T:   time mask max size
-        p:   probability of applying masking
-        m_T: number of time masks
-        """
+        self.policy: PolicyType = policy
+        self.zero_mean_normalized: bool = zero_mean_normalized
+
+        self.W: int  # Time warp parameter
+        self.F: int  # Frequency mask max size
+        self.m_F: int  # Number of frequency masks
+        self.T: int  # Time mask max size
+        self.p: float  # Probability of applying masking
+        self.m_T: int  # Number of time masks
         if self.policy == "LB":
             self.W, self.F, self.m_F, self.T, self.p, self.m_T = 80, 27, 1, 100, 1.0, 1
         elif self.policy == "LD":
@@ -40,37 +45,42 @@ class SpecAugment:
             self.W, self.F, self.m_F, self.T, self.p, self.m_T = 40, 15, 2, 70, 0.2, 2
         elif self.policy == "SS":
             self.W, self.F, self.m_F, self.T, self.p, self.m_T = 40, 27, 2, 70, 0.2, 2
+        else:
+            raise ValueError(f"Invalid policy: {policy}. Must be one of 'LB', 'LD', 'SM', 'SS'")
 
-    def time_warping(self, feature):
-        # Reshape to [Batch_size, time, freq, 1] for sparse_image_warp func.
-        feature = np.reshape(feature, (-1, feature.shape[0], feature.shape[1], 1))
-        v, tau = feature.shape[1], feature.shape[2]
-        horiz_line_thru_ctr = feature[0][v // 2]
+    def time_masking(self, feature: torch.Tensor) -> torch.Tensor:
+        """
+        Apply time masking to spectrogram.
 
-        # Random point along the horizontal/time axis
-        random_pt = horiz_line_thru_ctr[random.randrange(self.W, tau - self.W)]
-        w = np.random.uniform((-self.W), self.W)  # distance
+        Args:
+            feature: Input spectrogram of shape (time, freq)
 
-        src_points = [[[v // 2, random_pt[0]]]]
-        dest_points = [[[v // 2, random_pt[0] + w]]]
-
-        feature, _ = sparse_image_warp(feature, src_points, dest_points, num_boundaries_points=2)
-        return feature
-
-    def time_masking(self, feature):
-        tau = feature.shape[2]  # Time frames
-        # Apply m_T time masks to the Mel Spectrogram
+        Returns:
+            Time-masked spectrogram
+        """
+        tau = feature.shape[2]
+        masked = feature.clone()
         for _ in range(self.m_T):
-            t = int(np.random.uniform(0, self.T))  # [0, T)
-            upper = tau if t > tau else t  # make limitation
-            t0 = random.randint(0, tau - upper)  # [0, tau - t)
-            feature[:, :, t0 : t0 + t] = 0
-        return feature
+            t = int(np.random.uniform(0, self.T))
+            t0 = random.randint(0, tau - min(tau, t))
+            masked[:, :, t0 : t0 + t] = 0
+        return masked
 
-    def freq_masking(self, feature):
+    def freq_masking(self, feature: torch.Tensor) -> torch.Tensor:
+        """
+        Apply frequency masking to spectrogram.
+
+        Args:
+            feature: Input spectrogram of shape (time, freq)
+
+        Returns:
+            Frequency-masked spectrogram
+        """
         size = feature.shape[1]
+        masked = feature.clone()
         for _ in range(self.m_F):
-            f = int(np.random.uniform(0, self.F))  # [0, F)
-            f0 = random.randint(0, size - f)  # [0, v - f)
-            feature[:, f0 : f0 + f] = 0
-        return feature
+            random.uniform
+            f = int(np.random.uniform(0, self.F))
+            f0 = random.randint(0, max(0, size - f))
+            masked[:, f0 : f0 + f] = 0
+        return masked
