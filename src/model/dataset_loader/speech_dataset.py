@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torchaudio
 from config import CFG, EOS_TOKEN, SOS_TOKEN
-from spec_augment.method import SpecAugment
+from spec_augment.method import PolicyType, SpecAugment
 from torch.utils.data import Dataset
 
 
@@ -129,3 +129,60 @@ class SpeechDataset(Dataset):
         ax.set_xlabel("frame")
         fig.colorbar(im, ax=ax)
         plt.show(block=False)
+
+
+def _collate_fn(batch: List[Tuple[torch.Tensor, List[int]]]) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Collate function that pads variable-length sequences to the maximum length in the batch.
+
+    Args:
+        batch: A list of tuples where each tuple contains:
+            - [0]: Input sequence tensor of shape (seq_len, feat_dim)
+            - [1]: Target sequence as a list of integers
+
+    Returns:
+        A tuple containing:
+        - Padded input sequences tensor of shape (batch_size, max_seq_len, feat_dim)
+        - Padded target sequences tensor of shape (batch_size, max_target_len)
+
+    Example:
+        >>> batch = [(torch.rand(10, 40), [1,2,3]),
+        ...          (torch.rand(15, 40), [4,5])]
+        >>> inputs, targets = _collate_fn(batch)
+        >>> inputs.shape
+        torch.Size([2, 15, 40])
+        >>> targets.shape
+        torch.Size([2, 3])
+    """
+
+    def _seq_length(p: Tuple[torch.Tensor, List[int]]) -> int:
+        """
+        Return the sequence length (time dimension) of a sample
+        """
+        return p[0].size(0)
+
+    def _target_length(p: Tuple[torch.Tensor, List[int]]) -> int:
+        """
+        Return the target sequence length of a sample
+        """
+        return len(p[1])
+
+    # Find samples with maximum length in batch
+    max_seq_sample: torch.Tensor = max(batch, key=_seq_length)[0]
+    max_target_sample: List[int] = max(batch, key=_target_length)[1]
+
+    max_seq_size: int = max_seq_sample.size(0)
+    max_target_size: int = len(max_target_sample)
+    feat_size: int = max_seq_sample.size(1)
+    batch_size: int = len(batch)
+
+    seqs: torch.Tensor = torch.zeros((batch_size, max_seq_size, feat_size))
+    targets: torch.Tensor = torch.zeros(batch_size, max_target_size, dtype=torch.long)
+
+    for x in range(batch_size):
+        tensor, target = batch[x]
+        seq_length = tensor.size(0)
+
+        seqs[x].narrow(0, 0, seq_length).copy_(tensor)
+        targets[x].narrow(0, 0, len(target)).copy_(torch.LongTensor(target))
+    return seqs, targets
