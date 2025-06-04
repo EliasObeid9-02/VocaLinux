@@ -1,4 +1,5 @@
 import os
+from typing import cast
 
 import torch
 
@@ -12,9 +13,10 @@ class CFG:
     max_length = 500
 
     batch_size = 4  # number of samples processed
-    worker = os.cpu_count()  # 16
+    worker = cast(int, os.cpu_count())  # 16
     num_channels = 100  # 80
 
+    dataset_root = ""
     dataset_list = [
         "dev-clean",
         "dev-other",
