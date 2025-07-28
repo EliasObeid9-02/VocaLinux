@@ -17,16 +17,22 @@
   it.element.location(),
   it.indented(
     none,
-    [#heading_format(it.element) #it.inner() #linebreak()]
+    [#heading_format(it.element) #it.inner()]
   )
 )
 
 #show outline.entry.where(level: 1): it => link(
   it.element.location(),
-  it.inner()
+  it.indented(
+    none,
+    it.inner()
+  )
 )
 
-#align(center, outline(title: [Index]))
+#outline(
+  title: [Index#v(0.5em)],
+  indent: 2em
+)
 #pagebreak()
 
 #show outline.entry: it => link(
@@ -34,8 +40,16 @@
   it.indented(it.prefix(), it.inner())
 )
 
-#align(center, outline(title: [Figure Index#v(0.5em)], target: figure.where(kind: image)))
+#outline(
+  title: [Figure Index#v(0.5em)],
+  indent: 2em,
+  target: figure.where(kind: image)
+)
 #pagebreak()
 
-#align(center, outline(title: [Table Index#v(0.5em)], target: figure.where(kind: table)))
+#outline(
+  title: [Table Index#v(0.5em)],
+  indent: 2em,
+  target: figure.where(kind: table)
+)
 #pagebreak()
