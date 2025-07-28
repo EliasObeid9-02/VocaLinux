@@ -77,16 +77,32 @@
 
 // Figure rules
 #show figure.where(kind: image): set figure(
-  supplement: text(weight: "bold")[Figure],
+  supplement: if lang == "ar" {
+    text(weight: "bold")[الشكل]
+  } else {
+    text(weight: "bold")[Figure]
+  },
   numbering: n => {
-    text(weight: "bold", numbering("1-1", counter(heading).get().first(), n))
+    if lang == "ar" {
+      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)).rev())
+    } else {
+      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)))
+    }
   },
 )
 
 #show figure.where(kind: table): set figure(
-  supplement: text(weight: "bold")[Table],
+  supplement: if lang == "ar" {
+    text(weight: "bold")[الجدول]
+  } else {
+    text(weight: "bold")[Table]
+  },
   numbering: n => {
-    text(weight: "bold", numbering("1-1", counter(heading).get().first(), n))
+    if lang == "ar" {
+      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)).rev())
+    } else {
+      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)))
+    }
   },
 )
 
