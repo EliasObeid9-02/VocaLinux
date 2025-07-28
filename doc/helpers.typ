@@ -3,5 +3,9 @@
 
 #let flex_captions(long, short) = context if in_outline.get() { short } else { long }
 
-// English text function
-#let en(body) = text(lang: "en", body)
+// Text function
+#let en(body) = text(lang: "en", dir: ltr, font: "Times New Roman", body)
+#let en_std(body) = text(size: 13pt, en(body))
+
+#let ar(body) = text(lang: "ar", dir: rtl, font: "Simplified Arabic", body)
+#let ar_std(body) = text(size: 14pt, ar(body))

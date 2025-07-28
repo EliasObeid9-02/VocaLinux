@@ -108,12 +108,6 @@
 
 
 #if lang == "ar" {
-  set text(lang: "ar", dir: rtl, font: "Simplified Arabic", size: 14pt)
-  show text.where(lang: "en"): it => {
-    set text(lang: "en", dir: ltr, font: "Times New Roman", size: 13pt)
-    it
-  }
-
   include "sections_ar/cover_page.typ"
   include "sections_ar/abstract.typ"
   include "sections_ar/toc.typ"
@@ -124,8 +118,6 @@
   include "sections_ar/chapter_2.typ"
   include "sections_ar/chapter_3.typ"
 } else {
-  set text(lang: "en", dir: ltr, font: "Times New Roman", size: 13pt)
-
   include "sections_en/cover_page.typ"
   include "sections_en/abstract.typ"
   include "sections_en/toc.typ"
