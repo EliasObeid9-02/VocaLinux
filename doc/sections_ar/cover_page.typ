@@ -46,12 +46,12 @@
     rowspan: 1,
     colspan: 3,
     align(center)[
-      #ar_std([إعداد الطلاب]) \
-      #ar_std([الياس عبيد]) \ \
-      #ar_std([إشراف]) \
+      #ar_std([إعداد الطلاب])\
+      #ar_std([الياس عبيد])\ \
+      #ar_std([إشراف])\
       #ar_std([د. سامر سليمان])
     ]
-  ),
+  )
 )
 
 #pagebreak()
