@@ -1,5 +1,7 @@
+#import "helpers.typ": ar, ar_std, en, en_std
+
 // The desired language of the document, can be "en" or "ar".
-#let lang = sys.inputs.at("lang", default: "en")
+#let lang = sys.inputs.at("lang", default: "ar")
 
 #set page(paper: "a4")
 
@@ -78,32 +80,40 @@
 // Figure rules
 #show figure.where(kind: image): set figure(
   supplement: if lang == "ar" {
-    text(weight: "bold")[الشكل]
+    ar([*الشكل*])
   } else {
-    text(weight: "bold")[Figure]
+    en([*Figure*])
   },
   numbering: n => {
     if lang == "ar" {
-      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)).rev())
+      ar([
+        *#str(numbering("1-1", counter(heading).get().first(), n)).rev()*
+      ])
     } else {
-      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)))
+      en([
+        *#str(numbering("1-1", counter(heading).get().first(), n))*
+      ])
     }
-  },
+  }
 )
 
 #show figure.where(kind: table): set figure(
   supplement: if lang == "ar" {
-    text(weight: "bold")[الجدول]
+    ar([*الجدول*])
   } else {
-    text(weight: "bold")[Table]
+    en([*Table*])
   },
   numbering: n => {
     if lang == "ar" {
-      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)).rev())
+      ar([
+        *#str(numbering("1-1", counter(heading).get().first(), n)).rev()*
+      ])
     } else {
-      text(weight: "bold", str(numbering("1-1", counter(heading).get().first(), n)))
+      en([
+        *#str(numbering("1-1", counter(heading).get().first(), n))*
+      ])
     }
-  },
+  }
 )
 
 
@@ -112,7 +122,7 @@
   include "sections_ar/abstract.typ"
   include "sections_ar/toc.typ"
 
-  set page(numbering: "1", number-align: left+bottom)
+  set page(numbering: "1", number-align: left+bottom, binding: right)
   counter(page).update(1)
   include "sections_ar/chapter_1.typ"
   include "sections_ar/chapter_2.typ"
@@ -122,7 +132,7 @@
   include "sections_en/abstract.typ"
   include "sections_en/toc.typ"
 
-  set page(numbering: "1", number-align: right+bottom)
+  set page(numbering: "1", number-align: right+bottom, binding: left)
   counter(page).update(1)
   include "sections_en/chapter_1.typ"
   include "sections_en/chapter_2.typ"
