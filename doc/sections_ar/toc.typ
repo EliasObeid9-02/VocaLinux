@@ -1,4 +1,4 @@
-#import "../helpers.typ": in_outline, ar
+#import "../helpers.typ": in_outline, ar, ar_std
 
 #set outline.entry(fill: line(length: 100%))
 #show outline: it => {
@@ -15,7 +15,7 @@
 
 #show outline.entry: it => link(
   it.element.location(),
-  ar([
+  ar_std([
     #heading_format(it.element)
     #it.inner()
     #h(1.5em * (it.level - 1))\
@@ -24,7 +24,7 @@
 
 #show outline.entry.where(level: 1): it => link(
   it.element.location(),
-  ar([
+  ar_std([
     #it.inner()\
   ])
 )
