@@ -171,7 +171,7 @@
   image("../media/LAS_Speller-Architecture.png", width: 100%),
   kind: image,
   caption: flex_captions(
-    ar_std([المفكك #en_clean_std([Speller]) القائم على الانتباه. في كل خطوة، يستخدم الحرف السابق #en_std([$y$])، وحالته الداخلية #en_std([$s$])، ومتجه السياق #en_std([$c$]) (الذي تم إنشاؤه بواسطة آلية الانتباه على #en_std([$h$])) لإنتاج الحرف التالي في التسلسل.]),
+    ar_std([المفكك #en_clean_std([Speller]) القائم على الانتباه. في كل خطوة، يستخدم الحرف السابق #en_clean_std([$y$])، وحالته الداخلية #en_clean_std([$s$])، ومتجه السياق #en_clean_std([$c$]) (الذي تم إنشاؤه بواسطة آلية الانتباه على #en_clean_std([$h$])) لإنتاج الحرف التالي في التسلسل.]),
     ar_std([بنية المهجئ])
   )
 )
@@ -298,8 +298,8 @@
   image("../media/Scheduled-Sampling_Increasing-Schedules.png",  width: 70%),
   kind: image,
   caption: flex_captions(
-    ar([يوضح الرسم البياني كيف يزداد #en_std([$epsilon$]) على مدار 1000 حقبة تدريب وفقًا لكل جدول زمني.]),
-    ar([مخططات #en_clean([Sampling Rate Schedules])])
+    ar_std([يوضح الرسم البياني كيف يزداد #en_clean_std([$epsilon$]) على مدار 1000 حقبة تدريب وفقًا لكل جدول زمني.]),
+    ar_std([مخططات #en_clean_std([Sampling Rate Schedules])])
   )
 )
 
@@ -323,8 +323,8 @@
   ),
   kind: table,
   caption: flex_captions(
-    ar_std([مقارنة #en_clean([WER]) لنموذج #en_clean([LAS]) مع وبدون أخذ #en_clean([Scheduled Sampling]).]),
-    ar_std([مقارنة بين #en_clean([LAS]) الأساسي والمجدول])
+    ar_std([مقارنة #en_clean_std([WER]) لنموذج #en_clean_std([LAS]) مع وبدون أخذ #en_clean_std([Scheduled Sampling]).]),
+    ar_std([مقارنة بين #en_clean_std([LAS]) الأساسي والمجدول])
   )
 )
 
