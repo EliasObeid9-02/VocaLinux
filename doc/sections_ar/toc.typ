@@ -36,7 +36,11 @@
 
 #show outline.entry: it => link(
   it.element.location(),
-  it.indented(it.prefix(), it.inner())
+  // it.indented(it.prefix(), it.inner())
+  it.indented(
+    ar_std(it.prefix()),
+    ar_std(it.inner())
+  )
 )
 
 #outline(

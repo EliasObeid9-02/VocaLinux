@@ -1,6 +1,6 @@
 #import "../helpers.typ": ar, ar_std, en, en_std
 
-#set page(footer: align(left)[2024-2025])
+#set page(footer: align(left, ar_std([2024-2025])))
 
 #table(
   stroke: 0pt,
@@ -27,13 +27,13 @@
     colspan: 3,
     align(center)[
       #heading(
-        ar([تحويل الكلام إلى أوامر طرفية في لينكس\ ]),
+        ar([تحويل الكلام إلى أوامر طرفية في لينكس]),
         level: 1,
         outlined: false,
         numbering: none
       )
       #heading(
-        en([Transcribing Speech into Linux Terminal Commands\ ]),
+        en([Transcribing Speech into Linux Terminal Commands]),
         level: 1,
         outlined: false,
         numbering: none
