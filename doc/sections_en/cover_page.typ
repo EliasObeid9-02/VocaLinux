@@ -4,7 +4,7 @@
 
 #table(
   stroke: 0pt,
-  rows:(3fr, 3fr, 2fr, 1fr),
+  rows: (3fr, 3fr, 2fr, 1fr),
   columns: (1fr, 1fr, 1fr),
 
   table.cell(
