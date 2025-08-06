@@ -30,13 +30,12 @@
 )
 
 #outline(
-  title: [#ar([الفهرس])#v(0.5em)]
+  title: ar([الفهرس])
 )
 #pagebreak()
 
 #show outline.entry: it => link(
   it.element.location(),
-  // it.indented(it.prefix(), it.inner())
   it.indented(
     ar_std(it.prefix()),
     ar_std(it.inner())
@@ -44,13 +43,13 @@
 )
 
 #outline(
-  title: [#ar([فهرس الأشكال])#v(0.5em)],
+  title: ar([فهرس الأشكال]),
   target: figure.where(kind: image)
 )
 #pagebreak()
 
 #outline(
-  title: [#ar([فهرس الجداول])#v(0.5em)],
+  title: ar([فهرس الجداول]),
   target: figure.where(kind: table)
 )
 #pagebreak()
