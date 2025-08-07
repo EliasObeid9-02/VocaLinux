@@ -102,6 +102,12 @@
   This paper addresses a common issue in training sequence prediction models: the discrepancy between training (using "teacher forcing") and inference (using the model's own predictions). Scheduled Sampling provides a curriculum learning strategy that gradually shifts from teacher forcing to using the model's own predictions during training. This helps to close the gap between training and inference, leading to better performance in real-world scenarios.
 ])
 
+=== #en([Cyclical Learning Rates for Training Neural Networks])
+
+#en_std([
+  This paper challenges the conventional wisdom of monotonically decreasing the learning rate. It proposes Cyclical Learning Rates (CLR), a method where the learning rate cyclically varies between a minimum and maximum bound. This technique can lead to faster training and improved performance by helping the model traverse saddle points in the loss landscape more effectively. This concept forms the basis for an advanced optimization strategy explored in the later stages of our model training.
+])
+
 == #en([Documentation Structure])
 
 #en_std([

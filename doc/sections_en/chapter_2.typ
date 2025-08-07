@@ -382,6 +382,31 @@
   This result shows that Scheduled Sampling is a valuable technique that leads to more robust and accurate sequence generation models in practice.
 ])
 
+=== #en([Training Strategy: Cyclical Learning Rates (CLR)])
+
+#en_std([
+  The learning rate is widely considered the most critical hyperparameter to tune. Traditional methods often rely on a fixed learning rate that is manually decreased at set intervals (step decay). This approach requires extensive experimentation to find an optimal schedule. Cyclical Learning Rates (CLR) offer a more systematic and often more effective alternative.
+])
+
+==== #en([The CLR Method])
+
+#en_std([
+  Instead of decreasing the learning rate, CLR cyclically varies it between two predefined boundaries: a minimum (`base_lr`) and a maximum (`max_lr`). The insight behind this method is that periodically increasing the learning rate can have a short-term negative effect on performance but a long-term beneficial one, helping the optimization process escape from saddle points or sharp local minima and find a better final solution.
+
+  Several functional forms can be used for the cycle, with the original paper demonstrating that a simple triangular window (linear increase followed by linear decrease) is highly effective. Another popular and powerful variant is #strong("Cosine Annealing"), where the learning rate follows the curve of a cosine function between the boundaries. This project utilizes a stateful implementation of Cosine Annealing with restarts, allowing the cycle to be paused and resumed across multiple training runs.
+])
+
+#pagebreak()
+
+==== #en([The LR Range Test])
+
+#en_std([
+  A key contribution of the CLR paper is a simple and effective heuristic for finding optimal learning rate boundaries: the #strong("LR Range Test"). This involves running the model for a few epochs while linearly increasing the learning rate from a very low value to a high one. By plotting the accuracy (or loss) against the learning rate, one can visually identify:
+  - The learning rate at which the accuracy starts to increase (a good choice for `base_lr`).
+  - The learning rate at which the accuracy begins to slow, become ragged, or drop (a good choice for `max_lr`).
+
+  This simple test practically eliminates the need for extensive trial-and-error to find good learning rate values.
+])
 
 === #en([Inference Strategy: Beam Search Decoding])
 
