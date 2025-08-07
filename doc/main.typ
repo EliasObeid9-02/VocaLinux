@@ -7,6 +7,7 @@
 
 // Heading rules
 #set heading(numbering: "1-1-1-1-1")
+#show heading: set text(hyphenate: false)
 
 // Rule for Level 1 Heading (unique style)
 #show heading.where(level: 1): it => {
