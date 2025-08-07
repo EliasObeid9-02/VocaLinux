@@ -71,26 +71,20 @@
 
 #en_std([
   The raw audio waveforms are transformed into *log-Mel spectrograms*, a feature representation that mimics human auditory perception and is highly effective for speech recognition tasks. This conversion follows a precise sequence of steps:
-  
-  #enum(
-    [*Loading:* All audio files are loaded and standardized to a sample rate of $16,000$ Hz.],
-    [*STFT:* A Short-Time Fourier Transform (STFT) is applied to the signal using a Hann window, a Fast Fourier Transform (FFT) size of $1024$, and a hop length of $512$. This analyzes the audio's frequency content over time.],
-    [*Mel Scale Conversion:* The resulting spectrogram is mapped to the Mel scale using a filterbank of $100$ Mel bins.],
-    [*Logarithmic Scaling:* Finally, a logarithmic function is applied to the magnitudes of the Mel spectrogram. This compresses the dynamic range of the features, which stabilizes and accelerates model training.]
-  )
+  + *Loading*: All audio files are loaded and standardized to a sample rate of $16,000$ Hz.
+  + *STFT*: A Short-Time Fourier Transform (STFT) is applied to the signal using a Hann window, a Fast Fourier Transform (FFT) size of $1024$, and a hop length of $512$. This analyzes the audio's frequency content over time.
+  + *Mel Scale Conversion*: The resulting spectrogram is mapped to the Mel scale using a filterbank of $100$ Mel bins.
+  + *Logarithmic Scaling*: Finally, a logarithmic function is applied to the magnitudes of the Mel spectrogram. This compresses the dynamic range of the features, which stabilizes and accelerates model training.
 ])
 
 ==== #en([Text Processing and Vocabulary Curation])
 
 #en_std([
   The corresponding text transcripts are processed to create numerical target sequences for the model's decoder.
-
-  #enum(
-    [*Vocabulary*: A fixed, character-level vocabulary was defined to ensure consistency. It consists of $32$ unique tokens: the $26$ lowercase English letters, an apostrophe (`'`), a space character, and four special tokens (`<pad>`, `<unk>`, `<sos>`, `<eos>`).],
-    [*Tokenization and Normalization*: All transcript text is converted to lowercase. Each transcript is then tokenized into a sequence of its constituent characters.],
-    [*Special Tokens*: To signal the start and end of a sequence for the decoder, the `<sos>` (start of sentence) and `<eos>` (end of sentence) tokens are prepended and appended to each tokenized sequence, respectively.],
-    [*Integer Mapping*: Each character in the final sequence is mapped to its unique integer ID from the predefined vocabulary. Any character not found in the vocabulary is mapped to the `<unk>` (unknown) token ID. The `<pad>` token is used to pad all sequences within a batch to a uniform length.]
-  )
+  + *Vocabulary*: A fixed, character-level vocabulary was defined to ensure consistency. It consists of $32$ unique tokens: the $26$ lowercase English letters, an apostrophe (`'`), a space character, and four special tokens (`<pad>`, `<unk>`, `<sos>`, `<eos>`).
+  + *Tokenization and Normalization*: All transcript text is converted to lowercase. Each transcript is then tokenized into a sequence of its constituent characters.
+  + *Special Tokens*: To signal the start and end of a sequence for the decoder, the `<sos>` (start of sentence) and `<eos>` (end of sentence) tokens are prepended and appended to each tokenized sequence, respectively.
+  + *Integer Mapping*: Each character in the final sequence is mapped to its unique integer ID from the predefined vocabulary. Any character not found in the vocabulary is mapped to the `<unk>` (unknown) token ID. The `<pad>` token is used to pad all sequences within a batch to a uniform length.
 ])
 
 == #en([Model Architecture and Implementation])
@@ -105,12 +99,9 @@
 
 #en_std([
   Following the pyramidal BLSTM structure, our Listener is designed to process the input log-Mel spectrogram and produce a compact, high-level feature representation. The layers are arranged as follows:
-
-  #enum(
-    [*Input BLSTM Layer*: The input is first processed by a standard Bidirectional LSTM (BLSTM) layer with $256$ units in each direction.],
-    [*Layer Normalization*: The output is normalized to stabilize training.],
-    [*Pyramidal BLSTM (pBLSTM) Stack*: The normalized output is fed into a stack of three pBLSTM layers. Each layer reduces the time resolution by a factor of two and uses $256$ LSTM units per direction.]
-  )
+  + *Input BLSTM Layer*: The input is first processed by a standard Bidirectional LSTM (BLSTM) layer with $256$ units in each direction.
+  + *Layer Normalization*: The output is normalized to stabilize training.
+  + *Pyramidal BLSTM (pBLSTM) Stack*: The normalized output is fed into a stack of three pBLSTM layers. Each layer reduces the time resolution by a factor of two and uses $256$ LSTM units per direction.
 
   The final output of the Listener is a sequence of feature vectors that is $8$ times shorter in the temporal dimension than the original input spectrogram.
 ])
@@ -119,13 +110,10 @@
 
 #en_std([
   Our Speller is an attention-based decoder designed to generate the final text transcription. Its implementation leverages several of the advanced concepts outlined in Chapter 2.
-
-  #enum(
-    [*Character Embedding Layer*: The integer ID of the previously generated character is converted into a dense vector of dimension $256$.],
-    [*Decoder LSTM Stack*: The character embedding is processed by a stack of two unidirectional LSTM layers, each with $512$ units. To combat overfitting, both `dropout` and `recurrent_dropout` are applied.],
-    [*Location-Aware Multi-Head Attention*: At each step, a context vector is calculated using a *Location-Aware Attention* mechanism with *4 heads*. This allows the model to focus on different parts of the audio representation simultaneously while preventing it from losing its place in the sequence. The internal dimension of the attention mechanism is $512$.],
-    [*Character Distribution Layer*: The output from the decoder LSTM is passed through a final `Dense` layer with a *Softmax* activation, producing a probability distribution over the character vocabulary.],
-  )
+  + *Character Embedding Layer*: The integer ID of the previously generated character is converted into a dense vector of dimension $256$.
+  + *Decoder LSTM Stack*: The character embedding is processed by a stack of two unidirectional LSTM layers, each with $512$ units. To combat overfitting, both `dropout` and `recurrent_dropout` are applied.
+  + *Location-Aware Multi-Head Attention*: At each step, a context vector is calculated using a *Location-Aware Attention* mechanism with *4 heads*. This allows the model to focus on different parts of the audio representation simultaneously while preventing it from losing its place in the sequence. The internal dimension of the attention mechanism is $512$.
+  + *Character Distribution Layer*: The output from the decoder LSTM is passed through a final `Dense` layer with a *Softmax* activation, producing a probability distribution over the character vocabulary.
 ])
 
 == #en([Experiments and Results])
@@ -147,11 +135,8 @@
 
 #en_std([
   Building upon the standard scheduled sampling strategies discussed in Chapter 2, this project implements a custom strategy featuring a modified linear ramp-up and stabilization cycles. This approach was designed to bridge the gap between training and inference while keeping the model as stable as possible. This strategy's stages are:
-
-  #enum(
-    [*Initial Warm-up*: An initial warm-up period was used, during which the sampling probability was held constant. This allowed the model to stabilize before being exposed to its own, potentially noisy, predictions.],
-    [*Ramp-up and Stabilization Cycles*: Following the warm-up, the training proceeded in cycles. The sampling probability was gradually increased over a set number of epochs, followed by a stabilization period where the probability was held constant. This iterative process allowed the model to adapt to the increasing difficulty without becoming unstable.]
-  )
+  + *Initial Warm-up*: An initial warm-up period was used, during which the sampling probability was held constant. This allowed the model to stabilize before being exposed to its own, potentially noisy, predictions.
+  + *Ramp-up and Stabilization Cycles*: Following the warm-up, the training proceeded in cycles. The sampling probability was gradually increased over a set number of epochs, followed by a stabilization period where the probability was held constant. This iterative process allowed the model to adapt to the increasing difficulty without becoming unstable.
 
   The probability, $epsilon$, is updated at the beginning of each epoch during a ramp phase. The new probability for the current epoch, $epsilon_e$, is calculated by adding a fixed linear increment to the probability from the previous epoch, $epsilon_(e-1)$.
 

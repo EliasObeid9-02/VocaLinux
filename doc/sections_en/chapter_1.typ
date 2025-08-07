@@ -22,10 +22,8 @@
   #pagebreak()
 
   The system comprises two core modules working in concert:
-  #enum(
-    [*A Modified Speech Recognition (ASR) System*: This module's responsibility is to capture the user's spoken words and transcribe them into raw text. It must be tailored to recognize the specific vocabulary and phonetic patterns of shell commands, including the ability to discern individual characters for spelling out arguments.],
-    [*A Specialized Command Interpreter*: This is the logical core of the project. It receives the raw text from the ASR system and performs several crucial tasks: it maps the unstructured text to a valid command, checks for syntactical errors, corrects common spelling mistakes, and intelligently constructs valid file paths from the user's speech.]
-  )
+  + *A Modified Speech Recognition (ASR) System*: This module's responsibility is to capture the user's spoken words and transcribe them into raw text. It must be tailored to recognize the specific vocabulary and phonetic patterns of shell commands, including the ability to discern individual characters for spelling out arguments.
+  + *A Specialized Command Interpreter*: This is the logical core of the project. It receives the raw text from the ASR system and performs several crucial tasks: it maps the unstructured text to a valid command, checks for syntactical errors, corrects common spelling mistakes, and intelligently constructs valid file paths from the user's speech.
 
   A key design principle is resource efficiency. For this reason, the use of Large Language Models (LLMs) was explicitly ruled out. While powerful, LLMs carry substantial computational overhead and hardware requirements that conflict with the goal of creating a broadly accessible and deployable tool.
 ])
@@ -36,14 +34,11 @@
   The primary aim of this project is to design, implement, and evaluate a prototype system that provides a hands-free, voice-based interface for the Linux shell, with a focus on improving accessibility for users with physical disabilities.
 
   To achieve this aim, the following objectives have been established:
-
-  #enum(
-    [To identify a suitable Automatic Speech Recognition (ASR) model that is lightweight, powerful, and capable of independent character recognition.],
-    [To train and modify the selected ASR model to improve its performance and accuracy specifically for transcribing Linux shell commands.],
-    [To design a system architecture that effectively integrates the modified ASR module with a custom-built command interpretation engine.],
-    [To develop a working prototype that can recognize and correctly formulate a core set of common Linux commands.],
-    [To evaluate the prototype's accuracy and usability based on a predefined set of spoken command scenarios.],
-  )
+  + To identify a suitable Automatic Speech Recognition (ASR) model that is lightweight, powerful, and capable of independent character recognition.
+  + To train and modify the selected ASR model to improve its performance and accuracy specifically for transcribing Linux shell commands.
+  + To design a system architecture that effectively integrates the modified ASR module with a custom-built command interpretation engine.
+  + To develop a working prototype that can recognize and correctly formulate a core set of common Linux commands.
+  + To evaluate the prototype's accuracy and usability based on a predefined set of spoken command scenarios.
 ])
 
 == #en([Scope and Limitations])
