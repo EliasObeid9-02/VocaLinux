@@ -159,9 +159,12 @@
 
   This update rule can be expressed as:
 
-  #align(center)[
-    $epsilon_e = epsilon_(e-1) + (epsilon_f - epsilon_s) / E_r$
-  ]
+  #math.equation(
+    [
+      $epsilon_e = epsilon_(e-1) + (epsilon_f - epsilon_s) / E_r$
+  ],
+  block: true
+)
 
   where:
   - $epsilon_e$: The sampling probability for the current epoch $e$.
