@@ -3,47 +3,47 @@
 = #en([Chapter 3: Practical Work])
 
 #en_std([
-  This chapter details the system's design and implementation, covering the architecture, model training, and integration of the core components. The first component we will discuss is the rule-based interpreter, which translates the output of the speech recognition model into executable commands.
+  This chapter details the system's design and implementation, covering the architecture, model training, and integration of the core components.
 ])
 
 == #en([Implementation Environment and Technology Stack])
 
 #en_std([
   The project was developed entirely in the *Python* programming language, leveraging its extensive ecosystem for scientific computing and deep learning. The implementation relies on a set of robust, open-source libraries, summarized in the table below.
-])
 
-#figure(
-  table(
-    columns: (1fr, 1fr, 4fr),
-    align: (left+horizon, center+horizon, left+horizon),
-    en_std([*Category*]), en_std([*Library/Tool*]), en_std([*Purpose in Project*]),
+  #figure(
+    table(
+      columns: (1fr, 1fr, 4fr),
+      align: (left+horizon, center+horizon, left+horizon),
+      [*Category*], [*Library/Tool*], [*Purpose in Project*],
 
-    en_std([Deep Learning]),
-    en_std([TensorFlow and Keras]),
-    en_std([Used for building, training, and evaluating the core LAS model. Provided essential layers like `Bidirectional`, `LSTM`, and `Dense` for constructing the network architecture.]),
+      [Deep Learning],
+      [`TensorFlow` + `Keras`],
+      [Used for building, training, and evaluating the core LAS model. Provided essential layers like `Bidirectional`, `LSTM`, and `Dense` for constructing the network architecture.],
 
-    en_std([Numerical and Audio]),
-    en_std([NumPy]),
-    en_std([The fundamental package for efficient numerical operations and manipulation of data arrays, used throughout the data pipeline.]),
+      [Numerical and Audio],
+      [`NumPy`],
+      [The fundamental package for efficient numerical operations and manipulation of data arrays, used throughout the data pipeline.],
 
-    en_std([Numerical and Audio]),
-    en_std([SoundFile]),
-    en_std([Employed to read and write `.flac` audio files, converting raw audio data into a numerical format suitable for processing.]),
+      [Numerical and Audio],
+      [`SoundFile`],
+      [Employed to read and write `flac` audio files, converting raw audio data into a numerical format suitable for processing.],
 
-    en_std([Evaluation]),
-    en_std([Jiwer]),
-    en_std([Used to measure the performance of the final model. Provided a standardized implementation for calculating the Word Error Rate (WER) and Character Error Rate (CER).]),
+      [Evaluation],
+      [`Jiwer`],
+      [Used to measure the performance of the final model. Provided a standardized implementation for calculating the Word Error Rate WER and Character Error Rate CER.],
 
-    en_std([Visualization]),
-    en_std([Matplotlib]),
-    en_std([Utilized for plotting training and validation metrics (e.g., loss, WER) to visualize model performance and inform decisions during the experimental process.])
-  ),
-  kind: table,
-  caption: flex_captions(
-    en_std([A summary of the core open-source libraries and frameworks used to implement the system.]),
-    en_std([Project Technology Stack])
+      [Visualization],
+      [`Matplotlib`],
+      [Utilized for plotting training and validation metrics e.g., loss, WER to visualize model performance and inform decisions during the experimental process.]
+    ),
+    kind: table,
+    caption: flex_captions(
+      [A summary of the core open-source libraries and frameworks used to implement the system.],
+      [Project Technology Stack]
+    )
   )
-)
+])
 
 == #en([Dataset Implementation and Vocabulary Curation])
 
@@ -147,9 +147,9 @@
   #math.equation(
     [
       $epsilon_e = epsilon_(e-1) + (epsilon_f - epsilon_s) / E_r$
-  ],
-  block: true
-)
+    ],
+    block: true
+  )
 
   where:
   - $epsilon_e$: The sampling probability for the current epoch $e$.
