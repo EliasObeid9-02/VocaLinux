@@ -24,7 +24,7 @@
   set text(size: size, weight: "bold")
 
   if lang == "ar" {
-    let numbering = str(counter(heading).display()).rev()
+    let numbering = str(counter(heading).display()).split("-").rev().join("-")
     align(right, block(above: above, below: below, text(dir: rtl)[
         #en_clean(numbering)#h(0.5em)#it.body
       ])

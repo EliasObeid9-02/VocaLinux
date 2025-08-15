@@ -36,11 +36,11 @@
   numbering: n => {
     if lang == "ar" {
       ar_std([
-        *#str(numbering("1-1", counter(heading).get().first(), n)).rev()*
+        *#numbering("1-1", counter(heading).get().first(), n)*
       ])
     } else {
       en_std([
-        *#str(numbering("1-1", counter(heading).get().first(), n))*
+        *#numbering("1-1", counter(heading).get().first(), n)*
       ])
     }
   }
@@ -55,11 +55,11 @@
   numbering: n => {
     if lang == "ar" {
       ar_std([
-        *#str(numbering("1-1", counter(heading).get().first(), n)).rev()*
+        *#numbering("1-1", counter(heading).get().first(), n)*
       ])
     } else {
       en_std([
-        *#str(numbering("1-1", counter(heading).get().first(), n))*
+        *#numbering("1-1", counter(heading).get().first(), n)*
       ])
     }
   }
