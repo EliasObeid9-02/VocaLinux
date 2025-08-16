@@ -242,16 +242,16 @@
       [*حقبة*], [*نوع الخرج*], [*النص*],
 
       table.cell(rowspan: 2, en_clean_std([$15$])),
-      en_clean_std[Sampled Output], en_clean_std[di we really know the mountain well when we are not acquainted with the cave n],
-      en_clean_std([Non-Sampled Output]), en_clean_std([```text 'aaa  wweeeeddiinneeeddiinneeeddii  wwooddeer        aann          asssssss  aann             aann        asssssss  aann             hhettiinnsss        asssssss  aann             aann          hheee             aann        hhettiinnsss        asssssss  aann             aann   '```]),
+      en_clean_std[Sampled], en_clean_std[di we really know the mountain well when we are not acquainted with the cave n],
+      en_clean_std([Non-Sampled]), en_clean_std([```text 'aaa  wweeeeddiinneeeddiinneeeddii  wwooddeer        aann          asssssss  aann             aann        asssssss  aann             hhettiinnsss        asssssss  aann             aann          hheee             aann        hhettiinnsss        asssssss  aann             aann   '```]),
 
       table.cell(rowspan: 2, en_clean_std([$120$])),
-      en_clean_std([Sampled Output]), en_clean_std([do we really know thatmountain well ween we are not accuainted tith aaa cavern]),
-      en_clean_std([Non-Sampled Output]), en_clean_std([```text 'tee  rrr                                                                       '```]),
+      en_clean_std([Sampled]), en_clean_std([do we really know thatmountain well ween we are not accuainted tith aaa cavern]),
+      en_clean_std([Non-Sampled]), en_clean_std([```text 'tee  rrr                                                                       '```]),
 
       table.cell(rowspan: 2, en_clean_std([$240$])),
-      en_clean_std([Sampled Output]), en_clean_std([do ye rellly koow the mountain well whon we are not a quainted mith the cavern]),
-      en_clean_std([Non-Sampled Output]), en_clean_std([```text 'doo   rrellly  ooww tthe  nnn tto wwell wwill  werre nntttt   qquiint  ff miicc  ccaareen'```]),
+      en_clean_std([Sampled]), en_clean_std([do ye rellly koow the mountain well whon we are not a quainted mith the cavern]),
+      en_clean_std([Non-Sampled]), en_clean_std([```text 'doo   rrellly  ooww tthe  nnn tto wwell wwill  werre nntttt   qquiint  ff miicc  ccaareen'```]),
     ),
     kind: table,
     caption: flex_captions(
@@ -262,3 +262,133 @@
 
   تُظهر النتائج الواردة في الجدول بوضوح التحسينات المستمرة لنوع الخرج #en_clean_std([non-sampled]) بمرور الوقت. في البداية كانت المخرجات عشوائية وغير مفهومة، ولكن في النهاية بدأت أنماط تركيب كلمات منطقية تظهر بشكل واضح مما يشير إلى أن النموذج بدأ يتعلم التعرف على الكلمات. من ناحية أخرى، تدهورت المخرجات من نوع #en_clean_std([sampled]) مع زيادة احتمال أخذ العينات لكنها ما تزال مفهومة.
 ])
+
+#pagebreak()
+
+=== #ar([المرحلة الثانية: تعزيز الانتباه من خلال إدراك الموقع])
+
+#ar_std([
+  أثبتت نتائج المرحلة الأولى وجود أساس متين، ولكنها سلطت الضوء أيضًا على تحدٍ رئيسي: واجهت تقنية #en_clean_std([Multi-Head Attention]) القياسية صعوبة في التعامل مع التسلسلات الصوتية الطويلة، حيث كانت تفقد مكانها أحيانًا أو تفشل في تدوين الكلام بالكامل. كان الهدف من المرحلة الثانية هو معالجة هذه المشكلة عن طريق استبدال آلية الانتباه القياسية بآلية #en_clean_std([*Location-Aware Attention*]) الأكثر قوة.
+
+  تطلب هذا التغيير المعماري استمرار عملية التدريب بعناية. للسماح للنموذج بالتكيف، تمت إعادة تهيئة أوزان الطبقات الفرعية الجديدة للانتباه. ثم تم تدريب النموذج لمدة #en_clean_std([$140$]) حقبة إضافية.
+
+  لمساعدة النموذج على التكيف مع البنية الجديدة، تمت إعادة تعيين احتمال #en_clean_std([scheduled sampling]) إلى قيمة أقل ثم تم زيادتها تدريجياً خلال فترة التدريب. تم الحفاظ على معدل التعلم وقيم #en_clean_std([gradient clipping]) من نهاية المرحلة السابقة.
+
+  #figure(
+    table(
+      columns: (1fr, 1fr, 2fr),
+      align: (center, center, left),
+      [*القيمة النهائية*], [*القيمة الأولية*], en_clean_std([*Hyperparameter*]),
+      en_clean_std([$0.0003$]), en_clean_std([$0.0003$]), en_clean_std([Learning Rate]),
+      en_clean_std([$2.5$]), en_clean_std([$2.5$]), en_clean_std([Gradient Clipping Norm]),
+      en_clean_std([$0.5$]), en_clean_std([$0.1$]), en_clean_std([Sampling Probability (`epsilon`)])
+    ),
+    kind: table,
+    caption: flex_captions(
+      [قيم كل من #en_clean_std([Learning Rate]) و #en_clean_std([Gradient Clipping Norm]) و #en_clean_std([Sampling Probability]) خلال المرحلة الثانية من التدريب.],
+      [قيم #en_clean_std([Hyperparameters]) في المرحلة الثانية]
+    )
+  )
+
+  #pagebreak()
+
+  توضح الأشكال التالية تطور المقاييس على مدار #en_clean_std([$140$]) حقبة من التدريب في المرحلة الثانية.
+
+  #grid(
+    columns: 2,
+    gutter: 4pt,
+    // Figure 1: Model Loss
+    figure(
+      image("../media/Training_Phase-2_Model-Loss.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [قيم #en_clean_std([loss]) للنموذج على مدار #en_clean_std([$140$]) حقبة من تدريب المرحلة الثانية.],
+        [قيم #en_clean_std([loss]) للنموذج في المرحلة الثانية]
+      )
+    ),
+
+    // Figure 2: Model Accuracy
+    figure(
+      image("../media/Training_Phase-2_Model-Accuracy.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [دقة كل حرف خلال التدريب في المرحلة الثانية.],
+        [دقة النموذج في المرحلة الثانية]
+      )
+    ),
+
+    // Figure 3: Character Error Rate (CER)
+    figure(
+      image("../media/Training_Phase-2_Model-CER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [معدل خطأ الحرف (#en_clean_std([CER])) خلال التدريب في المرحلة الثانية.],
+        [قيم #en_clean_std([CER]) في المرحلة الثانية]
+      )
+    ),
+
+    // Figure 4: Word Error Rate (WER)
+    figure(
+      image("../media/Training_Phase-2_Model-WER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [معدل الخطأ في الكلمات (#en_clean_std([WER])) خلال التدريب في المرحلة الثانية.],
+        [قيم #en_clean_std([WER]) في المرحلة الثانية]
+      )
+    ),
+  )
+
+  كما يتضح النجاح النوعي لهذا التغيير المعماري في مقاييس الأداء. خلال هذه المرحلة، تجاوز كل من #en_clean_std([CER]) و #en_clean_std([WER]) أفضل القيم المسجلة في المرحلة الأولى، محققين أرقامًا قياسية جديدة للنموذج.
+
+  #pagebreak()
+
+  توضح الجداول التالية عدة أمثلة للتدوين من نقاط مختلفة خلال هذه المرحلة، كما قمنا بتضمين مخرجات من نهاية المرحلة الأولى لتوضيح التحسينات التي تم تحقيقها من خلال تطبيق ”الانتباه المدرك للموقع“.
+
+  #figure(
+    table(
+      columns: (1.5fr, 2.5fr, 8fr),
+      align: (center+horizon, center+horizon, center+horizon),
+      inset: 8pt,
+      [*المرحلة/الحقبة*], [*نوع المخرجات*], [*النص*],
+
+      [$1$/$240$], en_clean_std([Beam Search]), [```text 'whnn it is a queestion of proving alooond aass  ooiitty ssnnss ween hassaaddbbeen considered floweed to go toooo tthrr tto go ttotthe bottom'```],
+      [$2$/$20$], en_clean_std([Beam Search]), [```text 'when iss accuushhddiin off rrogginng a ooon    gollf  a  so iide  since  wee  has aad bbeen considered faamm to go  to  ffrr tto ggo  to  hhe bottom'```],
+      [$2$/$80$], en_clean_std([Beam Search]), [```text 'when it is accuusseed ee  ff rroiing awwoodd   gollf aass  syy t  since hhen has it been considered froww tto go to ffor tto go ttotthe botuum'```],
+      [$2$/$140$], en_clean_std([Beam Search]), [```text 'when it is a question oof proping a ooond  ggolf aa  sosside    ssnnc  ween has i  been considered frowwntto go too far to go to the bathom'```]
+    ),
+    kind: table,
+    caption: flex_captions(
+      [مقارنة النتائج للجملة: #en_clean_std([\"when it is a question of probing a wound a gulf a society since when has it been considered wrong to go too far to go to the bottom\"]).],
+      [مقارنة لجملة متوسطة الطول]
+    )
+  )
+
+  من المقارنة نلاحظ أن النموذج أصبح أكثر مقاومة للأخطاء السابقة وأصبح الآن قادراً على إخراج الكلمات الصحيحة حتى بعد الأخطاء.
+
+  #pagebreak()
+
+  #figure(
+    table(
+      columns: (1fr, 3fr, 8fr),
+      align: (center+horizon, center+horizon, center+horizon),
+      inset: 8pt,
+      [*المرحلة/الحقبة*], [*نوع المخرجات*], [*النص*],
+
+      [$1$/$240$], en_clean_std([Beam Search]), [```text 'to keep aee loot annd to resk you frr   llivinn toowwhole ttee goll whhereiit by  ffragmments of somme llnnguunn wwhich man has spoken  nn  which wooeedoott ofwwhich ttss compoccated too eexteend  oftthe records oofssocial observatioon issseeltth'```],
+      [$2$/$20$], en_clean_std([Beam Search]), [```text 'to  eee  lott annd too uus  you  ff   bbliivinn  oo  hhole abbove thhe goll  wheeriit buut iffrrggmeents oof some llnnguage wwhichmman has spokken oof wwhich  siveaalizaationnaas commosee  orrr  vve  whhich it iss complitatee  twweettsstnnd  of tthe recorrs  of sss'```],
+      [$2$/$80$], en_clean_std([Beam Search]), [```text 'to keep a foo  and too rest you foo  a bivvi  in  nn  ooll tto oove hhe golf  whereiit but iffraagmennt  o  some language which man has spoken and whicch would other iise be lost that  is oo say one of the elements good or aad off whicch iivilizaatiooniis composed '```],
+      [$2$/$140$], en_clean_std([Beam Search]), [```text 'to people fol  and to rescue froom a blivioo  nn  hhole to  oov  the golf wher  it but ifraagment oofssome language which man has spoken andwwhich woudd otherwiiee beloost mataas  oo say oone of tthe elements good or aad of whicc  sivilizatiooniis composed oor  by '```]
+    ),
+    kind: table,
+    caption: flex_captions(
+      [مقارنة النتائج للجملة: #en_clean_std([\"to keep afloat and to rescue from oblivion to hold above the gulf were it but a fragment of some language which man has spoken and which would otherwise be lost that is to say one of the elements good or bad of which civilization is composed or by which it is complicated to extend the records of social observation is to serve civilization itself\"]).],
+      [مقارنة جملة طويلة الطول]
+    )
+  )
+
+  مرة أخرى، توضح هذه الجملة الطويلة التحسينات التي حققها النموذج من خلال إدراك الموقع، على سبيل المثال، فقد فاتت النسخة المدونة في المرحلة الأولى الكثير من أنماط الكلمات مثل تلك الخاصة بـ #en_clean_std([\"above\"]) و #en_clean_std([\"civilization\"])، بينما في نهاية المرحلة الثانية، أنتج النموذج أنماط كلمات لهما.
+])
+
+// TODO: complete this section
+== #ar([ المفسر القائم على القواعد])
+
