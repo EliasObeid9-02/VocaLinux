@@ -186,7 +186,7 @@
 
   #pagebreak()
 
-  The following figures show the progression of the metrics over the 240 epochs of training of Phase 1:
+  The following figures show the progression of the metrics over the $240$ epochs of training of Phase 1:
 
   #grid(
     columns: 2,
@@ -196,7 +196,7 @@
       image("../media/Training_Phase-1_Model-Loss.png", width: 100%),
       kind: image,
       caption: flex_captions(
-        [Model loss over the 240 epochs of Phase 1 training.],
+        [Model loss over the $240$ epochs of Phase 1 training.],
         [Phase 1 Model Loss]
       )
     ),
@@ -243,17 +243,17 @@
       inset: 8pt,
       [*Epoch*], [*Output Type*], [*Transcription*],
 
-      table.cell(rowspan: 2, [15]),
-      [Sampled Output], [di we really know the mountain well when we are not acquainted with the cave n],
-      [Non-Sampled Output], [```text 'aaa  wweeeeddiinneeeddiinneeeddii  wwooddeer        aann          asssssss  aann             aann        asssssss  aann             hhettiinnsss        asssssss  aann             aann          hheee             aann        hhettiinnsss        asssssss  aann             aann   '```],
+      table.cell(rowspan: 2, [$15$]),
+      [Sampled], [di we really know the mountain well when we are not acquainted with the cave n],
+      [Non-Sampled], [```text 'aaa  wweeeeddiinneeeddiinneeeddii  wwooddeer        aann          asssssss  aann             aann        asssssss  aann             hhettiinnsss        asssssss  aann             aann          hheee             aann        hhettiinnsss        asssssss  aann             aann   '```],
 
-      table.cell(rowspan: 2, [120]),
-      [Sampled Output], [do we really know thatmountain well ween we are not accuainted tith aaa cavern],
-      [Non-Sampled Output], [```text 'tee  rrr                                                                       '```],
+      table.cell(rowspan: 2, [$120$]),
+      [Sampled], [do we really know thatmountain well ween we are not accuainted tith aaa cavern],
+      [Non-Sampled], [```text 'tee  rrr                                                                       '```],
 
-      table.cell(rowspan: 2, [240]),
-      [Sampled Output], [do ye rellly koow the mountain well whon we are not a quainted mith the cavern],
-      [Non-Sampled Output], [```text 'doo   rrellly  ooww tthe  nnn tto wwell wwill  werre nntttt   qquiint  ff miicc  ccaareen'```],
+      table.cell(rowspan: 2, [$240$]),
+      [Sampled], [do ye rellly koow the mountain well whon we are not a quainted mith the cavern],
+      [Non-Sampled], [```text 'doo   rrellly  ooww tthe  nnn tto wwell wwill  werre nntttt   qquiint  ff miicc  ccaareen'```],
     ),
     kind: table,
     caption: flex_captions(
@@ -264,6 +264,126 @@
 
   The results in the table clearly demonstrate steady improvements of non-sampled outputs over time. At first it was random incoherent output, but at the end word patterns have started emerging indicating the model is learning to starting to recognize words. On the other hand, sampled outputs degraded with the increased sampling probability but they are still coherent.
 ])
+
+=== #en([Phase 2: Enhancing Attention with Location-Awareness])
+
+#en_std([
+  The results from Phase 1 established a solid baseline, but also highlighted a key challenge: the standard Multi-Head Attention struggled with longer audio sequences, sometimes losing its place or failing to transcribe the full utterance. The objective of Phase 2 was to address this by replacing the standard attention mechanism with a more robust *Location-Aware Attention* mechanism.
+
+  This architectural change required a careful continuation of the training process. To allow the model to adapt, the weights of the new attention sub-layers were re-initialized. The model was then trained for an additional $140$ epochs.
+
+  To help the model adjust to the new architecture, the scheduled sampling probability was reset to a lower value and then gradually increased over the training period. The learning rate and gradient clipping values were maintained from the end of the previous phase.
+
+  #figure(
+    table(
+      columns: (2fr, 1fr, 1fr),
+      align: (left, center, center),
+      [*Hyperparameter*], [*Initial Value*], [*Final Value*],
+      [Learning Rate], [$0.0003$], [$0.0003$],
+      [Gradient Clipping Norm], [$2.5$], [$2.5$],
+      [Sampling Probability (`epsilon`)], [$0.1$], [$0.5$],
+    ),
+    kind: table,
+    caption: flex_captions(
+      [Hyperparameter values during the $140$ epochs of Phase 2 training.],
+      [Phase 2 Hyperparameters]
+    )
+  )
+
+  The following figures show the progression of the metrics over the $140$ epochs of training in Phase 2.
+
+  #grid(
+    columns: 2,
+    gutter: 4pt,
+    // Figure 1: Model Loss
+    figure(
+      image("../media/Training_Phase-2_Model-Loss.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Model loss over the 140 epochs of Phase 2 training.],
+        [Phase 2 Model Loss]
+      )
+    ),
+
+    // Figure 2: Model Accuracy
+    figure(
+      image("../media/Training_Phase-2_Model-Accuracy.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Per-character accuracy during Phase 2 training.],
+        [Phase 2 Model Accuracy]
+      )
+    ),
+
+    // Figure 3: Character Error Rate (CER)
+    figure(
+      image("../media/Training_Phase-2_Model-CER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Character Error Rate (CER) during Phase 2 training.],
+        [Phase 2 Model CER]
+      )
+    ),
+
+    // Figure 4: Word Error Rate (WER)
+    figure(
+      image("../media/Training_Phase-2_Model-WER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Word Error Rate (WER) during Phase 2 training.],
+        [Phase 2 Model WER]
+      )
+    ),
+  )
+
+  The quantitative success of this architectural change is also clear in the performance metrics. During this phase, both the CER and WER surpassed the best values from Phase 1, setting new records for the model.
+
+  The following tables shows multiple sample transcriptions from different points during this phase, we also include outputs from the end of Phase 1 to illustrate the improvements gained from applying Location-Aware Attention.
+
+  #figure(
+    table(
+      columns: (1fr, 3fr, 8fr),
+      align: (center+horizon, center+horizon, center+horizon),
+      inset: 8pt,
+      [*Phase/Epoch*], [*Output Type*], [*Transcription*],
+
+      [$1$/$240$], [Beam Search], [```text 'whnn it is a queestion of proving alooond aass  ooiitty ssnnss ween hassaaddbbeen considered floweed to go toooo tthrr tto go ttotthe bottom'```],
+      [$2$/$20$], [Beam Search], [```text 'when iss accuushhddiin off rrogginng a ooon    gollf  a  so iide  since  wee  has aad bbeen considered faamm to go  to  ffrr tto ggo  to  hhe bottom'```],
+      [$2$/$80$], [Beam Search], [```text 'when it is accuusseed ee  ff rroiing awwoodd   gollf aass  syy t  since hhen has it been considered froww tto go to ffor tto go ttotthe botuum'```],
+      [$2$/$140$], [Beam Search], [```text 'when it is a question oof proping a ooond  ggolf aa  sosside    ssnnc  ween has i  been considered frowwntto go too far to go to the bathom'```],
+    ),
+    kind: table,
+    caption: flex_captions(
+      [Output comparison for the sentence: "when it is a question of probing a wound a gulf a society since when has it been considered wrong to go too far to go to the bottom".],
+      [Medium Length Sample Comparison]
+    )
+  )
+
+  From the comparison we notice that the model is more resistant to earlier errors and is now able to output correct words even after mistakes.
+
+  #figure(
+    table(
+      columns: (1fr, 3fr, 8fr),
+      align: (center+horizon, center+horizon, center+horizon),
+      inset: 8pt,
+      [*Phase/Epoch*], [*Output Type*], [*Transcription*],
+
+      [1/240], [Beam Search], [```text 'to keep aee loot annd to resk you frr   llivinn toowwhole ttee goll whhereiit by  ffragmments of somme llnnguunn wwhich man has spoken  nn  which wooeedoott ofwwhich ttss compoccated too eexteend  oftthe records oofssocial observatioon issseeltth'```],
+      [2/20], [Beam Search], [```text 'to  eee  lott annd too uus  you  ff   bbliivinn  oo  hhole abbove thhe goll  wheeriit buut iffrrggmeents oof some llnnguage wwhichmman has spokken oof wwhich  siveaalizaationnaas commosee  orrr  vve  whhich it iss complitatee  twweettsstnnd  of tthe recorrs  of sss'```],
+      [2/80], [Beam Search], [```text 'to keep a foo  and too rest you foo  a bivvi  in  nn  ooll tto oove hhe golf  whereiit but iffraagmennt  o  some language which man has spoken and whicch would other iise be lost that  is oo say one of the elements good or aad off whicch iivilizaatiooniis composed '```],
+      [2/140], [Beam Search], [```text 'to people fol  and to rescue froom a blivioo  nn  hhole to  oov  the golf wher  it but ifraagment oofssome language which man has spoken andwwhich woudd otherwiiee beloost mataas  oo say oone of tthe elements good or aad of whicc  sivilizatiooniis composed oor  by '```],
+    ),
+    kind: table,
+    caption: flex_captions(
+      [Output comparison for the sentence: "to keep afloat and to rescue from oblivion to hold above the gulf were it but a fragment of some language which man has spoken and which would otherwise be lost that is to say one of the elements good or bad of which civilization is composed or by which it is complicated to extend the records of social observation is to serve civilization itself".],
+      [Long Length Sample Comparison]
+    )
+  )
+
+  Again, this long length sample demonstrates the improvements the model gained from location-awareness, for example the transcript from phase 1 has missed a lot of word patterns such as the one for "above" and "civilization" while at the end of phase 2 the model generated word patterns for them.
+])
+
+#pagebreak()
 
 // TODO: complete this section
 == #en([The Rule-Based Interpreter])
