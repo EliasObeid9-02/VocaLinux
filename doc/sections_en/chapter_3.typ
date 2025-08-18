@@ -385,38 +385,68 @@
 
 #pagebreak()
 
-// TODO: complete this section
 == #en([The Rule-Based Interpreter])
 
-// #en_std([
-// ])
-//
-// === Escaping Keywords
-//
-// To handle cases where a keyword (like "list" or "slash") is intended as a literal argument rather than a command or special character, the system includes an escape mechanism. The keyword "backslash" preceding any other recognized keyword causes the interpreter to treat the subsequent keyword as plain text, ignoring its special function. For example, the phrase "copy backslash list to home" would result in the command `cp list /home`, treating "list" as a literal filename.
-//
-// === Recognized Command Vocabulary
-//
-// The interpreter is designed to recognize a specific set of spoken keywords and map them to a predefined vocabulary of Linux commands. The following table lists a representative subset of the supported commands, their corresponding spoken keywords, and a brief description of their function.
-//
-// #figure(
-//   table(
-//     columns: (1fr, 1fr, 2fr),
-//     align: (center+horizon, center+horizon, center+horizon),
-//     [*Spoken Keyword(s)*], [*Generated Command*], [*Description*],
-//     ["list"], [`ls`], [Lists directory contents.],
-//     ["change directory"], [`cd`], [Changes the current directory.],
-//     ["copy"], [`cp`], [Copies files or directories.],
-//     ["move"], [`mv`], [Moves or renames files or directories.],
-//     ["remove"], [`rm`], [Removes files or directories.],
-//     ["make directory"], [`mkdir`], [Creates a new directory.],
-//     ["echo"], [`echo`], [Displays a line of text.],
-//     ["touch"], [`touch`], [Creates an empty file.],
-//   ),
-//   kind: table,
-//   caption: flex_captions(
-//     [List of commands recognized by the interpreter.],
-//     [Recognized Commands]
-//   )
-// )
-//
+#en_std([
+  The output from the ASR model is a raw text transcription, which, while often accurate, is not a syntactically valid shell command. Spoken language is inherently ambiguous and contains phonetic spellings (e.g., "slash," "dash") that a terminal cannot execute. The final component of this project is a rule-based interpreter designed to bridge this gap. Its sole purpose is to parse the raw ASR output and translate it into a well-formed, executable Linux command.
+
+  The interpretation process is handled in two main stages: first, a *Translator* converts spoken keywords into their corresponding characters and commands, and second, a *Path Resolver* intelligently corrects potential spelling errors in file and directory paths.
+])
+
+=== #en([Translation and Vocabulary Mapping])
+
+#en_std([
+  The first stage of interpretation is managed by the `Translator` class. It operates on a predefined vocabulary of keywords that map spoken words to their intended text representation. This vocabulary is organized into several categories.
+])
+
+==== #en([Recognized Vocabulary])
+
+#en_std([
+  The interpreter's vocabulary is explicitly defined to handle commands, special characters, digits, and a phonetic alphabet for spelling.
+
+  - *Commands*: A core set of common Linux commands are recognized.
+  - *Special Characters*: Spoken words like "slash," "dot," or "double quote" are mapped to their symbolic equivalents (`/`, `.`, `"`).
+  - *Digits*: Spoken numbers ("zero" through "nine") are converted to their digit form.
+  - *Phonetic Alphabet*: A standard phonetic alphabet (e.g., "adam" for "a", "boy" for "b") is used to allow for precise, unambiguous spelling of filenames or arguments.
+
+  The table below details the primary keywords recognized by the interpreter.
+
+  #figure(
+    table(
+      columns: (2fr, 4fr),
+      align: (left, left),
+      [*Category*], [*Examples*],
+      [Commands], [`ls`, `cd`, `cp`, `mv`, `rm`, `mkdir`, `echo`, `touch`],
+      [Special Characters], [`slash` -> `/`, `hyphen` -> `-`, `double quote` -> `"`],
+      [Digits], [`one` -> `1`, `five` -> `5`, `nine` -> `9`],
+      [Phonetic Alphabet], [`adam` -> `a`, `robert` -> `r`, `zebra` -> `z`],
+    ),
+    kind: table,
+    caption: flex_captions(
+      [Categories and examples from the interpreter's recognized vocabulary.],
+      [Interpreter Vocabulary]
+    )
+  )
+])
+
+==== #en([Multi-Word Keyword Detection])
+
+#en_std([
+  To handle keywords that consist of more than one word (e.g., "double quote"), the translator implements a longest-match-first algorithm. It scans the input text for the longest possible keyword sequence at any given position. For example, when processing the phrase "double quote my file," it will first identify "double quote" as a single, two-word token and translate it to `"`, rather than processing "double" and "quote" as separate, unknown words.
+])
+
+==== #en([Keywords Escaping Mechanism])
+
+#en_std([
+  To handle cases where a keyword is intended as a literal argument, the system includes an escape mechanism. The keyword *backslash* preceding any other recognized keyword causes the interpreter to treat the subsequent keyword as plain text, ignoring its special function. For example, the phrase "echo space backslash space" would result in the command `echo space`, correctly treating "space" as a literal word rather than an empty space between words.
+])
+
+=== #en([Path Resolution and Correction])
+
+#en_std([
+  A common source of error in speech recognition is the misspelling of filenames or directory names. The `PathResolver` class is designed to mitigate this issue by intelligently correcting paths.
+
+  After the initial translation, the interpreter splits the command into parts. Any part containing a path separator (`/`) is passed to the path resolver. The resolver then processes the path segment by segment. For each segment, it checks the corresponding directory on the filesystem and uses a fuzzy string matching algorithm (`difflib.get_close_matches`) to find the closest matching file or directory name. If a close match (with a similarity cutoff of 0.5) is found, it replaces the potentially misspelled segment with the correct name.
+
+  This mechanism works for both absolute and relative paths, significantly increasing the robustness of the system by correcting minor transcription errors that would otherwise cause the final command to fail.
+])
