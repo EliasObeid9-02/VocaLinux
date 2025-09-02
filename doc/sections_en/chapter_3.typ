@@ -530,3 +530,38 @@ d
 
   This mechanism works for both absolute and relative paths, significantly increasing the robustness of the system by correcting minor transcription errors that would otherwise cause the final command to fail.
 ])
+
+== #en([Summary of Results])
+
+#en_std([
+  The practical work detailed in this chapter successfully yielded a functional proof-of-concept system capable of transcribing spoken English into executable Linux commands. The iterative, multi-phase training process produced a robust ASR model, which, when coupled with the rule-based interpreter, forms a complete end-to-end solution.
+
+  The key results of the project can be summarized as follows:
+  - *Development of a Specialized ASR Model*: Through a three-phase experimental process, a Listen, Attend, and Spell (LAS) model was successfully trained on the LibriSpeech corpus. The final model, incorporating a Location-Aware Multi-Head Attention mechanism, achieved a significant level of accuracy, establishing new performance records for CER and WER at the conclusion of Phase $2$.
+  - *Architectural Superiority of Location-Aware Attention*: The experiments clearly demonstrated the practical benefits of Location-Aware Attention over a standard attention mechanism. Its introduction in Phase $2$ solved critical alignment issues, such as word repetitions and omissions in longer audio sequences, leading to a marked improvement in transcription quality.
+  - *Implementation of a Robust Command Interpreter*: A sophisticated, rule-based interpreter was developed to translate the ASR model's raw text output into valid commands. Its dual-stage process, featuring a longest-match keyword translator and a fuzzy-matching path resolver, proved effective at handling the ambiguities of spoken language and correcting minor transcription errors, thereby increasing the overall usability of the system.
+  - *Identification of Overfitting as a Core Challenge*: The final training phase successfully identified the primary limitation of the current model: a tendency to overfit the $100$-hour training dataset. This was diagnosed as a mismatch between the large network size and the limited data volume, providing a clear and critical insight that informs the recommendations for future work.
+])
+
+== #en([Difficulties Encountered])
+
+#en_std([
+  Throughout the project's development, several significant technical challenges were encountered and addressed. These difficulties were instrumental in shaping the final design and informing the project's conclusions.
+  - *Attention Mechanism Failure on Long Sequences*: The most significant initial challenge arose during Phase $1$ of training. The standard Multi-Head Attention mechanism, while effective on shorter utterances, proved unreliable on longer audio sequences. It frequently failed to maintain proper alignment, resulting in outputs with repeated phrases or incomplete transcriptions. This difficulty necessitated the architectural pivot to Location-Aware Attention in Phase $2$, which became a critical factor in the project's success.
+  - *Severe Model Overfitting*: The primary difficulty in the later stages of training was severe overfitting. As detailed in Phase $3$, the model's performance on the validation set plateaued and failed to improve, even as training metrics stabilized. Initial attempts to mitigate this with increased dropout were unsuccessful. The root cause was identified as a fundamental mismatch between the model's large parameter count and the relatively small $100$-hour dataset, a conclusion supported by comparing our training data volume to that used in the original LAS paper.
+  - *Handling Ambiguity in Spoken Commands*: A persistent challenge was translating the inherent ambiguity of human speech into the precise syntax required by the Linux shell. A general-purpose ASR model does not inherently distinguish between "list" (a word) and `ls` (a command), nor can it easily handle spoken punctuation or file paths. This necessitated the development of the rule-based interpreter, which added a significant layer of complexity to the project but was essential for making the system functional. The design of its vocabulary, multi-word keyword detection, and escape mechanism required careful consideration and iterative refinement.
+])
+
+== #en([Recommendations and Future Work])
+
+#en_std([
+  Based on the results achieved and the difficulties encountered, several clear directions for future work have been identified. These recommendations aim to build upon the project's successes and directly address its current limitations.
+  - *Expand the Training Dataset*: The most critical next step is to address the overfitting problem by significantly increasing the volume of training data. Migrating from the `train-clean-100` ($100$ hours) split to the `train-clean-360` ($360$ hours) or `train-other-500` ($500$ hours) splits of LibriSpeech would provide the model with a much richer and more diverse dataset, better justifying its large network size and likely leading to substantial improvements in generalization and overall accuracy.
+  - *Experiment with Model Scaling and Augmentation*: As an alternative or complementary approach to expanding the dataset, future work should explore reducing the model's size. Systematically decreasing the number of LSTM units or pBLSTM layers could create a more appropriately sized network for the $100$-hour dataset, potentially mitigating overfitting. Furthermore, a more aggressive application of SpecAugment could be investigated to further enhance the diversity of the existing training data.
+  - *Enhance the Rule-Based Interpreter*: The interpreter, while functional, could be expanded to support a wider range of shell functionalities. Future iterations should focus on:
+    - *Support for Advanced Shell Features*: Implementing logic to handle command chaining (pipes `|`), output redirection (`>`), and complex arguments would dramatically increase the system's power and utility.
+    - *Context-Aware Vocabulary*: The interpreter could be made more intelligent by maintaining awareness of the current working directory. This would allow it to offer more accurate path completions and dynamically suggest valid arguments for commands like `cd`.
+  - *User-Specific Adaptation and Fine-Tuning*: To further improve accessibility, a system for user-specific fine-tuning could be developed. Allowing the model to adapt to an individual user's accent, vocabulary, and commonly used commands would likely result in a significant boost in real-world performance and user satisfaction.
+])
+
+#pagebreak()
