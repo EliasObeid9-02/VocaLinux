@@ -385,6 +385,86 @@
 
 #pagebreak()
 
+=== #en([Phase 3: Combating Overfitting with Regularization])
+
+#en_std([
+  Following the architectural improvements in Phase $2$, a clear pattern of overfitting began to emerge. While the training metrics continued to improve, the validation metrics started to plateau, indicating that the model was beginning to memorize the training data rather than learning to generalize. Although the validation metrics showed signs of plateauing throughout training, the cause was attributed to low sampling rate.
+
+  The objective of this brief, $55$-epoch phase was to combat this overfitting by introducing stronger regularization. The primary strategy was to increase the dropout rates in the decoder and apply dropout to the encoder for the first time.
+
+  To increase regularization, the `dropout` and `recurrent_dropout` values in the Speller's LSTM stack were raised. Additionally, a new `dropout` layer was added to the Listener's pBLSTM stack to regularize the encoder. Other hyperparameters were maintained from the end of the previous phase.
+
+  #figure(
+    table(
+      columns: (2fr, 1fr, 1fr),
+      align: (left, center, center),
+      [*Hyperparameter*], [*Initial Value*], [*Final Value*],
+      [Learning Rate], [$0.0003$], [$0.0003$],
+      [Gradient Clipping Norm], [$2.5$], [$2.5$],
+      [Sampling Probability (`epsilon`)], [$0.5$], [$0.5$],
+      [Decoder Dropout], [$0.17$], [$0.3$],
+      [Encoder Dropout], [$0.0$], [$0.1$],
+    ),
+    kind: table,
+    caption: flex_captions(
+      [Hyperparameter values during the 55 epochs of Phase 3 training.],
+      [Phase 3 Hyperparameters]
+    )
+  )
+
+  The model was trained for 55 epochs with the enhanced regularization. The following figures show the progression of the metrics during this phase.
+
+  #grid(
+    columns: 2,
+    gutter: 4pt,
+    // Figure 1: Model Loss
+    figure(
+      image("../media/Training_Phase-3_Model-Loss.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Model loss over the 55 epochs of Phase 3 training.],
+        [Phase 3 Model Loss]
+      )
+    ),
+
+    // Figure 2: Model Accuracy
+    figure(
+      image("../media/Training_Phase-3_Model-Accuracy.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Per-character accuracy during Phase 3 training.],
+        [Phase 3 Model Accuracy]
+      )
+    ),
+
+    // Figure 3: Character Error Rate (CER)
+    figure(
+      image("../media/Training_Phase-3_Model-CER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Character Error Rate (CER) during Phase 3 training.],
+        [Phase 3 Model CER]
+      )
+    ),
+
+    // Figure 4: Word Error Rate (WER)
+    figure(
+      image("../media/Training_Phase-3_Model-WER.png", width: 100%),
+      kind: image,
+      caption: flex_captions(
+        [Word Error Rate (WER) during Phase 3 training.],
+        [Phase 3 Model WER]
+      )
+    ),
+  )
+
+  The analysis of this phase was conclusive. While the training metrics continued to show stabilization or slight improvement, the validation metrics showed no clear signs of progress. The validation WER and CER failed to improve upon the records set at the end of Phase $2$. Because the increased regularization did not yield the desired improvement in generalization, this experimental phase was concluded. This outcome prompted a shift in strategy towards exploring different potential solutions.
+
+  Many attempts were tried in order to combat the overfitting problem. By thorough review of the original research paper, the model code, and the training strategy employed, we determined one of the causes of the problem to be the discrepancy between the size of training data and the network size. For comparison, the research paper mentioned that they trained the model on $2000$ hours of training using the same network size employed in our implementation, while our implementation was trained on only $100$ hours of training data.
+
+  This large discrepancy prompted us to consider reducing the network size massively, applying heavy augmentation through the SpecAugment method, and using a larger dataset such as the $360$ hour split. Another technique tried was *Cyclical Learning Rate Schedule*. The model versions using these modifications where trained for a variety of epochs ranging from $20$ all the way to $100$, and most versions didn't provide any improvements or potential signs of solving the overfitting problem.
+])
+
 == #en([The Rule-Based Interpreter])
 
 #en_std([
@@ -396,7 +476,7 @@
 === #en([Translation and Vocabulary Mapping])
 
 #en_std([
-  The first stage of interpretation is managed by the `Translator` class. It operates on a predefined vocabulary of keywords that map spoken words to their intended text representation. This vocabulary is organized into several categories.
+  The first stage of interpretation is managed by the `Translator` class. It operates on a predefined vocabulary of keywords that map spoken words to their intended text representation. This vocabulary is organized into several categories.o
 ])
 
 ==== #en([Recognized Vocabulary])
@@ -408,7 +488,7 @@
   - *Special Characters*: Spoken words like "slash," "dot," or "double quote" are mapped to their symbolic equivalents (`/`, `.`, `"`).
   - *Digits*: Spoken numbers ("zero" through "nine") are converted to their digit form.
   - *Phonetic Alphabet*: A standard phonetic alphabet (e.g., "adam" for "a", "boy" for "b") is used to allow for precise, unambiguous spelling of filenames or arguments.
-
+d
   The table below details the primary keywords recognized by the interpreter.
 
   #figure(
@@ -446,7 +526,7 @@
 #en_std([
   A common source of error in speech recognition is the misspelling of filenames or directory names. The `PathResolver` class is designed to mitigate this issue by intelligently correcting paths.
 
-  After the initial translation, the interpreter splits the command into parts. Any part containing a path separator (`/`) is passed to the path resolver. The resolver then processes the path segment by segment. For each segment, it checks the corresponding directory on the filesystem and uses a fuzzy string matching algorithm (`difflib.get_close_matches`) to find the closest matching file or directory name. If a close match (with a similarity cutoff of 0.5) is found, it replaces the potentially misspelled segment with the correct name.
+  After the initial translation, the interpreter splits the command into parts. Any part containing a path separator (`/`) is passed to the path resolver. The resolver then processes the path segment by segment. For each segment, it checks the corresponding directory on the filesystem and uses a fuzzy string matching algorithm (`difflib.get_close_matches`) to find the closest matching file or directory name. If a close match (with a similarity cutoff of $0.5$) is found, it replaces the potentially misspelled segment with the correct name.
 
   This mechanism works for both absolute and relative paths, significantly increasing the robustness of the system by correcting minor transcription errors that would otherwise cause the final command to fail.
 ])
