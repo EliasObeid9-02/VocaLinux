@@ -389,6 +389,37 @@
   مرة أخرى، توضح هذه الجملة الطويلة التحسينات التي حققها النموذج من خلال إدراك الموقع، على سبيل المثال، فقد فاتت النسخة المدونة في المرحلة الأولى الكثير من أنماط الكلمات مثل تلك الخاصة بـ #en_clean_std([\"above\"]) و #en_clean_std([\"civilization\"])، بينما في نهاية المرحلة الثانية، أنتج النموذج أنماط كلمات لهما.
 ])
 
+=== #ar([المرحلة الثالثة: مكافحة #en_clean([Overfitting]) باستخدام #en_clean([Regularization])])
+
+#ar_std([
+  بعد التحسينات المعمارية في المرحلة الثانية، بدأت تظهر علامات #en_clean_std([overfitting]) بشكل واضح. في حين استمرت مقاييس التدريب في التحسن، بدأت مقاييس التحقق تستقر، مما يشير إلى أن النموذج بدأ في حفظ بيانات التدريب بدلاً من تعلم كيفية تعميم استنتاجاته. على الرغم من أن مقاييس التحقق أظهرت علامات استقرار طوال فترة التدريب، إلا أن السبب نُسب إلى قيمة #en_clean_std([sampling rate]) المنخفضة.
+
+  كان الهدف من هذه المرحلة الموجزة المكونة من $55$ بؤرة تخطيطية هو مكافحة #en_clean_std([overfitting]) عن طريق استخدام #en_clean_std([regularization]). تمثلت الاستراتيجية الأساسية في زيادة معدلات #en_clean_std([dropout]) في وحدة فك التشفير وتطبيق #en_clean_std([dropout]) على وحدة التشفير لأول مرة.
+
+  ولزيادة #en_clean_std([regularization])، تم رفع قيمتي #en_clean_std([\"dropout\"]) و #en_clean_std([\"recurrent_dropout\"]) في مكدس #en_clean_std([LSTM]) الخاص بالمستمع. بالإضافة إلى ذلك، تمت إضافة طبقة #en_clean_std([\"dropout\"]) جديدة إلى مكدس #en_clean_std([pBLSTM]) الخاص بالمستمع لتطبيق #en_clean_std([regularization]) على نتائج التشفير الداخلية. تم الحفاظ على #en_clean_std([hyperparameters]) الأخرى من نهاية المرحلة السابقة.
+
+  #figure(
+    table(
+      columns: (1fr, 1fr, 2fr),
+      align: (center, center, left),
+      [*القيمة النهائية*], [*القيمة الأولية*], en_clean_std([*Hyperparameter*]),
+      en_clean_std([$0.0003$]), en_clean_std([$0.0003$]), en_clean_std([Learning Rate]),
+      en_clean_std([$2.5$]), en_clean_std([$2.5$]), en_clean_std([Gradient Clipping Norm]),
+      en_clean_std([$0.5$]), en_clean_std([$0.1$]), en_clean_std([Sampling Probability (`epsilon`)]),
+      en_clean_std([$0.3$]), en_clean_std([$0.17$]), en_clean_std([Decoder Dropout]),
+      en_clean_std([$0.1$]), en_clean_std([$0.0$]), en_clean_std([Encoder Dropout]),
+    ),
+    kind: table,
+    caption: flex_captions(
+      [قيم كل من #en_clean_std([Learning Rate]) و #en_clean_std([Gradient Clipping Norm]) و #en_clean_std([Sampling Probability]) خلال المرحلة الثالثة من التدريب.],
+      [قيم #en_clean_std([Hyperparameters]) في المرحلة الثالثة]
+    )
+  )
+
+  تم تدريب النموذج على $55$ حقبة مع #en_clean_std([regularization]) محسّنة. توضح الأشكال التالية تطور المقاييس خلال هذه المرحلة.
+
+])
+
 == #ar([ المفسر القائم على القواعد])
 
 #ar_std([
