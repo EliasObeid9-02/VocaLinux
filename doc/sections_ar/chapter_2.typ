@@ -73,24 +73,22 @@
 #ar_std([
   يتم تقسيم المجموعة رسميًا إلى عدة أقسام محددة مسبقًا، كل منها يخدم غرضًا محددًا في دورة تطوير النموذج. يتم تصنيف الأقسام الأساسية إلى ”نقية“ (أقل ضوضاء خلفية وصدى) و”أخرى“ (صوت أكثر صعوبة).
 
-  #en_std(
-    figure(
-      table(
-        columns: (2fr, 0.75fr, 1.25fr, 4fr),
-        align: (center+horizon, center+horizon, center+horizon, center+horizon),
-        ar_std([*اسم القسم*]), ar_std([*الساعات*]), ar_std([*المتحدثين*]), ar_std([*الهدف*]),
-        [`train-clean-100`], [$100$], [$251$], ar_std([مقاطع صوتية نقية للتدريب البسيط.]),
-        [`train-clean-360`], [$360$], [$921$], ar_std([مقاطع صوتية نقية للتدريب الطويل.]),
-        [`train-other-500`], [$500$], [$1166$], ar_std([مقاطع صوتية صعبة للتدريب.]),
-        [`dev-clean`], [$5.4$], [$40$], ar_std([مقاطع صوتية نقية لمهام #en_clean_std([validation]) و #en_clean_std([development]).]),
-        [`dev-other`], [$5.1$], [$39$], ar_std([مقاطع صوتية صعبة لمهام #en_clean_std([validation]) و #en_clean_std([development]).]),
-        [`test-clean`], [$5.4$], [$40$], ar_std([مقاطع صوتية نقية لتجريب النموذج.]),
-        [`test-other`], [$5.1$], [$40$], ar_std([مقاطع صوتية صعبة لتجريب النموذج.]),
-      ),
-      caption: flex_captions(
-        ar_std([تقسيمات البيانات المتاحة في مجموعة #en_clean_std([LibriSpeech]).]),
-        ar_std([تقسيم بيانات مجموعة #en_clean_std([LibriSpeech])])
-      )
+  #figure(
+    table(
+      columns: (2fr, 0.75fr, 1.25fr, 4fr),
+      align: (center+horizon, center+horizon, center+horizon, center+horizon),
+      [*اسم القسم*], [*الساعات*], [*المتحدثين*], [*الهدف*],
+      [`train-clean-100`], [$100$], [$251$], [مقاطع صوتية نقية للتدريب البسيط.],
+      [`train-clean-360`], [$360$], [$921$], [مقاطع صوتية نقية للتدريب الطويل.],
+      [`train-other-500`], [$500$], [$1166$], [مقاطع صوتية صعبة للتدريب.],
+      [`dev-clean`], [$5.4$], [$40$], [مقاطع صوتية نقية لمهام #en_clean_std([validation]) و #en_clean_std([development]).],
+      [`dev-other`], [$5.1$], [$39$], [مقاطع صوتية صعبة لمهام #en_clean_std([validation]) و #en_clean_std([development]).],
+      [`test-clean`], [$5.4$], [$40$], [مقاطع صوتية نقية لتجريب النموذج.],
+      [`test-other`], [$5.1$], [$40$], [مقاطع صوتية صعبة لتجريب النموذج.],
+    ),
+    caption: flex_captions(
+      ar_std([تقسيمات البيانات المتاحة في مجموعة #en_clean_std([LibriSpeech]).]),
+      ar_std([تقسيم بيانات مجموعة #en_clean_std([LibriSpeech])])
     )
   )
   
