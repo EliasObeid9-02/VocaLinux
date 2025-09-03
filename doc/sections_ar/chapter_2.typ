@@ -372,22 +372,20 @@
 
   يقارن الجدول أدناه، باستخدام بيانات من الورقة الأصلية، أداء نموذج #en_clean_std([LAS]) مع وبدون أخذ العينات.
 
-  #en_std([
-    #figure(
-      table(
-        columns: (3fr, 2fr, 2fr),
-        align: (center, center, center),
-        [*Model*], [*Clean WER*], [*Noisy WER*],
-        [LAS (Baseline)], [$16.2%$], [$19.0%$],
-        [LAf + Sampling], [$14.1%$], [$16.5%$],
-      ),
-      kind: table,
-      caption: flex_captions(
-        ar_std([مقارنة #en_clean_std([WER]) لنموذج #en_clean_std([LAS]) مع وبدون #en_clean_std([Scheduled Sampling])، كما ورد في الورقة الأصلية.]),
-        ar_std([مقارنة #en_clean_std([WER]) قبل وبعد تطبيق #en_clean_std([Scheduled Sampling])])
-      )
+  #figure(
+    table(
+      columns: (2fr, 2fr, 3fr),
+      align: (center, center, center),
+      en_clean_std([*Noisy WER*]), en_clean_std([*Clean WER*]), en_clean_std([*Model*]),
+      [$19.0%$], [$16.2%$], en_clean_std([LAS (Baseline)]),
+      [$16.5%$], [$14.1%$], en_clean_std([LAS + Sampling]),
+    ),
+    kind: table,
+    caption: flex_captions(
+      ar_std([مقارنة #en_clean_std([WER]) لنموذج #en_clean_std([LAS]) مع وبدون #en_clean_std([Scheduled Sampling])، كما ورد في الورقة الأصلية.]),
+      ar_std([مقارنة #en_clean_std([WER]) قبل وبعد تطبيق #en_clean_std([Scheduled Sampling])])
     )
-  ])
+  )
 
   تظهر هذه النتيجة أن #en_clean_std([Scheduled Sampling]) هي تقنية قيّمة تؤدي إلى نماذج توليد تسلسل أكثر قوة ودقة في الواقع العملي.
 ])
