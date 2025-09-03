@@ -497,13 +497,13 @@
 
   #figure(
     table(
-      columns: (4fr, 2fr),
-      align: (right, right),
-      [*أمثلة*], [*التصنيف*],
-      en_std([`ls`, `cd`, `cp`, `mv`, `rm`, `mkdir`, `echo`, `touch`]), [أوامر],
-      en_std([`slash` -> `/`, `hyphen` -> `-`, `double quote` -> `"`]), [أحرف مميزة],
-      en_std([`one` -> `1`, `five` -> `5`, `nine` -> `9`]), [أرقام],
-      en_std([`adam` -> `a`, `robert` -> `r`, `zebra` -> `z`]), [أبجدية صوتية],
+      columns: (2fr, 4fr),
+      align: (right, center),
+      [*التصنيف*], [*أمثلة*],
+      [أوامر], en_std([`ls`, `cd`, `cp`, `mv`, `rm`, `mkdir`, `echo`, `touch`]),
+      [أحرف مميزة], en_std([`slash` -> `/`, `hyphen` -> `-`, `double quote` -> `"`]),
+      [أرقام], en_std([`one` -> `1`, `five` -> `5`, `nine` -> `9`]),
+      [أبجدية صوتية], en_std([`adam` -> `a`, `robert` -> `r`, `zebra` -> `z`]),
     ),
     kind: table,
     caption: flex_captions(
