@@ -13,6 +13,8 @@
 #let ar(body) = text(lang: "ar", dir: rtl, font: "Simplified Arabic", body)
 #let ar_std(body) = text(size: 14pt, ar(body))
 
+#let ref(body) = text(fill: rgb("#444"), en_clean_std([[#body]]))
+
 // Heading show rule constructor
 #let numbered_heading(
   it, // The original heading object

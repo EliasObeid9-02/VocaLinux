@@ -1,4 +1,4 @@
-#import "../helpers.typ": en, en_std
+#import "../helpers.typ": en, en_std, ref
 
 = #en([Chapter 1: Introduction])
 
@@ -68,7 +68,7 @@
 === #en([Listen, Attend, and Spell])
 
 #en_std([
-  This paper introduces the Listen, Attend, and Spell (LAS) model, an end-to-end neural network for automatic speech recognition. It proposes a novel architecture consisting of a "Listener" (an encoder) that processes the audio input and a "Speller" (a decoder) that uses an attention mechanism to generate the text transcription. The LAS model simplifies the traditional speech recognition pipeline by learning to transcribe speech directly from audio, which is the core of our speech-to-text component.
+  This paper introduces the Listen, Attend, and Spell (LAS) model, an end-to-end neural network for automatic speech recognition. It proposes a novel architecture consisting of a "Listener" (an encoder) that processes the audio input and a "Speller" (a decoder) that uses an attention mechanism to generate the text transcription. The LAS model simplifies the traditional speech recognition pipeline by learning to transcribe speech directly from audio, which is the core of our speech-to-text component. #ref("1")
 ])
 
 #pagebreak()
@@ -76,31 +76,31 @@
 === #en([Attention is All You Need])
 
 #en_std([
-  This seminal paper introduces the Transformer architecture, which dispenses with recurrence and convolutions entirely, relying solely on attention mechanisms. While the full Transformer model is not used in this project, we draw from its key innovation: Multi-Head Attention. This mechanism enhances standard attention by running it multiple times in parallel. Each of these "attention heads" learns to focus on different parts of the input, allowing the model to jointly attend to information from different representation subspaces simultaneously. This concept is leveraged to improve the representational power of our model's attention layer.
+  This seminal paper introduces the Transformer architecture, which dispenses with recurrence and convolutions entirely, relying solely on attention mechanisms. While the full Transformer model is not used in this project, we draw from its key innovation: Multi-Head Attention. This mechanism enhances standard attention by running it multiple times in parallel. Each of these "attention heads" learns to focus on different parts of the input, allowing the model to jointly attend to information from different representation subspaces simultaneously. This concept is leveraged to improve the representational power of our model's attention layer. #ref("2")
 ])
 
 === #en([Attention-Based Models for Speech Recognition])
 
 #en_std([
-  This paper further explores the use of attention mechanisms in speech recognition. It introduces a location-aware attention mechanism that helps the model to better handle long utterances and repetitions. This is particularly relevant for our project, as it allows the model to maintain focus on the relevant parts of the audio signal when transcribing longer and more complex commands.
+  This paper further explores the use of attention mechanisms in speech recognition. It introduces a location-aware attention mechanism that helps the model to better handle long utterances and repetitions. This is particularly relevant for our project, as it allows the model to maintain focus on the relevant parts of the audio signal when transcribing longer and more complex commands. #ref("3")
 ])
 
 === #en([SpecAugment: A Simple Data Augmentation Method])
 
 #en_std([
-  SpecAugment presents a simple yet highly effective data augmentation technique for speech recognition. It operates directly on the log-mel spectrogram of the audio input, applying time warping, frequency masking, and time masking to create more robust models. By incorporating SpecAugment into our training pipeline, we aim to improve the model's resilience to variations in speech and background noise.
+  SpecAugment presents a simple yet highly effective data augmentation technique for speech recognition. It operates directly on the log-mel spectrogram of the audio input, applying time warping, frequency masking, and time masking to create more robust models. By incorporating SpecAugment into our training pipeline, we aim to improve the model's resilience to variations in speech and background noise. #ref("4")
 ])
 
 === #en([Scheduled Sampling for Sequence Prediction])
 
 #en_std([
-  This paper addresses a common issue in training sequence prediction models: the discrepancy between training (using "teacher forcing") and inference (using the model's own predictions). Scheduled Sampling provides a curriculum learning strategy that gradually shifts from teacher forcing to using the model's own predictions during training. This helps to close the gap between training and inference, leading to better performance in real-world scenarios.
+  This paper addresses a common issue in training sequence prediction models: the discrepancy between training (using "teacher forcing") and inference (using the model's own predictions). Scheduled Sampling provides a curriculum learning strategy that gradually shifts from teacher forcing to using the model's own predictions during training. This helps to close the gap between training and inference, leading to better performance in real-world scenarios. #ref("5")
 ])
 
 === #en([Cyclical Learning Rates for Training Neural Networks])
 
 #en_std([
-  This paper challenges the conventional wisdom of monotonically decreasing the learning rate. It proposes Cyclical Learning Rates (CLR), a method where the learning rate cyclically varies between a minimum and maximum bound. This technique can lead to faster training and improved performance by helping the model traverse saddle points in the loss landscape more effectively. This concept forms the basis for an advanced optimization strategy explored in the later stages of our model training.
+  This paper challenges the conventional wisdom of monotonically decreasing the learning rate. It proposes Cyclical Learning Rates (CLR), a method where the learning rate cyclically varies between a minimum and maximum bound. This technique can lead to faster training and improved performance by helping the model traverse saddle points in the loss landscape more effectively. This concept forms the basis for an advanced optimization strategy explored in the later stages of our model training. #ref("6")
 ])
 
 == #en([Documentation Structure])

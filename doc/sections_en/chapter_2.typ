@@ -1,4 +1,4 @@
-#import "../helpers.typ": flex_captions, en, en_std
+#import "../helpers.typ": flex_captions, en, en_std, ref
 
 = #en([Chapter 2: Theoretical Foundations])
 
@@ -45,7 +45,7 @@
 == #en([Foundational Datasets: The LibriSpeech Corpus])
 
 #en_std([
-  A cornerstone in modern Automatic Speech Recognition (ASR) research is the *LibriSpeech* corpus. First introduced by Vassil Panayotov et al., it is a large-scale dataset containing approximately $1000$ hours of read English speech, derived from the audiobooks of the LibriVox project. Its substantial size, clean audio recordings, and well-defined partitions have established it as a standard benchmark for developing and evaluating ASR systems.
+  A cornerstone in modern Automatic Speech Recognition (ASR) research is the *LibriSpeech* corpus #ref("7"). First introduced by Vassil Panayotov et al., it is a large-scale dataset containing approximately $1000$ hours of read English speech, derived from the audiobooks of the LibriVox project. Its substantial size, clean audio recordings, and well-defined partitions have established it as a standard benchmark for developing and evaluating ASR systems.
 ])
 
 === #en([Corpus Structure and Organization])
@@ -160,7 +160,7 @@
     image("../media/LAS_Full-Architecture.png", width: 75%),
     kind: image,
     caption: flex_captions(
-      [The end-to-end architecture of the Listen, Attend, and Spell (LAS) model, showing the flow from the listener to the speller.],
+      [The end-to-end architecture of the Listen, Attend, and Spell (LAS) model, showing the flow from the listener to the speller. #ref("9")],
       [Full LAS Architecture]
     )
   )
@@ -341,7 +341,7 @@
 
 #en_std([
   The core of the issue lies in the source of input to the decoder at each time step.
-  - *Teacher Forcing*: The standard training method provides the ground-truth previous token, $y_(t-1)$, as input when predicting the next token, $y_t$. This is efficient and stable, but it creates a mismatch with inference, where the ground-truth is unavailable. The model is never trained to recover from its own errors.
+  - *Teacher Forcing*: The standard training method provides the ground-truth previous token, $y_(t-1)$, as input when predicting the next token, $y_t$ #ref("8"). This is efficient and stable, but it creates a mismatch with inference, where the ground-truth is unavailable. The model is never trained to recover from its own errors.
   - *Free-Running*: The opposite approach is to feed the model's own previous prediction, $hat(y)_(t-1)$, as input during training. While this mirrors inference conditions perfectly, it is extremely difficult to train from scratch, as the initially random predictions can lead to chaotic inputs and prevent convergence. This method has been shown to yield poor performance.
 ])
 
@@ -389,7 +389,7 @@
 ==== #en([The CLR Method])
 
 #en_std([
-  Instead of decreasing the learning rate, CLR cyclically varies it between two predefined boundaries: a minimum (`base_lr`) and a maximum (`max_lr`). The insight behind this method is that periodically increasing the learning rate can have a short-term negative effect on performance but a long-term beneficial one, helping the optimization process escape from saddle points or sharp local minima and find a better final solution.
+  Instead of decreasing the learning rate, CLR cyclically varies it between two predefined boundaries: a minimum (`base_lr`) and a maximum (`max_lr`). The insight behind this method is that periodically increasing the learning rate can have a short-term negative effect on performance but a long-term beneficial one, helping the optimization process escape from saddle points or sharp local minima and find a better final solution. #ref("10")
 
   Several functional forms can be used for the cycle, with the original paper demonstrating that a simple triangular window (linear increase followed by linear decrease) is highly effective. Another popular and powerful variant is *Cosine Annealing*, where the learning rate follows the curve of a cosine function between the boundaries.
 ])

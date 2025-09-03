@@ -104,3 +104,5 @@
   include "sections_en/chapter_2.typ"
   include "sections_en/chapter_3.typ"
 }
+
+#include "references.typ"
