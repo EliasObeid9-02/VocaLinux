@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from VocaLinux.configs import dataset as dataset_config
 from VocaLinux.configs import training as training_config
-from VocaLinux.model.build.losses import safe_sparse_categorical_crossentropy
+from VocaLinux.model.build.loss import safe_sparse_categorical_crossentropy
 from VocaLinux.model.build.metrics import CharacterErrorRate, WordErrorRate
 from VocaLinux.model.las_model import LASModel
 
@@ -80,3 +80,28 @@ def rebuild_model(model: LASModel) -> LASModel:
     """
     _compile_model(model)
     return model
+
+
+def load_model_from_file(filepath: str) -> LASModel:
+    """Loads and compiles a Listen, Attend, and Spell (LAS) model from a saved file.
+
+    The loaded model is recompiled with the standard optimizer, loss, and metrics,
+    ensuring it's ready for further training or evaluation. Custom objects
+    (loss functions, metrics, and learning rate schedules) are handled during loading.
+
+    Args:
+        filepath (str): The absolute path to the saved model file.
+
+    Returns:
+        LASModel: The loaded and recompiled LAS model.
+    """
+    custom_objects = {
+        "LASModel": LASModel,
+        "safe_sparse_categorical_crossentropy": safe_sparse_categorical_crossentropy,
+        "CharacterErrorRate": CharacterErrorRate,
+        "WordErrorRate": WordErrorRate,
+    }
+    loaded_model = tf.keras.models.load_model(filepath, custom_objects=custom_objects)
+    loaded_model = cast(LASModel, loaded_model)
+    _compile_model(loaded_model)
+    return loaded_model
