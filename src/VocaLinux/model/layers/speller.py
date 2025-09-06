@@ -3,8 +3,8 @@ from typing import List
 import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Dense, Embedding, Layer, LayerNormalization
 
-from model.layers.attention import AttentionContext
-from model.vocabulary import EOS_TOKEN, SOS_TOKEN, VOCAB_SIZE
+from VocaLinux.model.layers.attention import AttentionContext
+from VocaLinux.model.vocabulary import EOS_TOKEN, SOS_TOKEN, VOCAB_SIZE
 
 
 class Speller(Layer):
@@ -18,13 +18,13 @@ class Speller(Layer):
 
     def __init__(
         self,
-        lstm_units: int = 512,
-        num_decoder_lstm_layers: int = 2,
-        attention_units: int = 512,
-        output_vocab_size: int = VOCAB_SIZE,
-        embedding_dim: int = 256,
-        sampling_probability: float = 0.1,
-        beam_width: int = 32,
+        lstm_units: int,
+        num_decoder_lstm_layers: int,
+        attention_units: int,
+        output_vocab_size: int,
+        embedding_dim: int,
+        sampling_probability: float,
+        beam_width: int,
         name: str = "speller",
     ):
         """

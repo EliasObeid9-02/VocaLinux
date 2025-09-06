@@ -6,20 +6,14 @@ import numpy as np
 import soundfile as sf
 import tensorflow as tf
 
-from model.vocabulary import CHAR_TO_ID
+from VocaLinux.model.vocabulary import CHAR_TO_ID
+from VocaLinux.configs import dataset as dataset_config
 
 
 class LibriSpeechDatasetLoader:
     """
     A class to load and preprocess the LibriSpeech dataset using TensorFlow and SoundFile.
-
-    The dataset is structured as:
-    data_root/
-    ├── split_name/ (e.g., dev-clean, test-clean, train-clean-100, train-clean-360)
-    │   ├── speaker_id/
-    │   │   ├── chapter_id/
-    │   │   │   ├── speaker_id-chapter_id-utterance_id.flac
-    │   │   │   └── speaker_id-chapter_id.trans.txt
+    Includes on-the-fly, mutually exclusive SpecAugment functionality based on user-defined partitions.
     """
 
     def __init__(self, data_root: str, batch_size: int):
@@ -35,25 +29,133 @@ class LibriSpeechDatasetLoader:
 
         self.data_root = data_root
         self.batch_size = batch_size
-        self.sample_rate = 16000
+        self.sample_rate = dataset_config.SAMPLE_RATE
+        self.n_fft = dataset_config.N_FFT
+        self.hop_length = dataset_config.HOP_LENGTH
+        self.n_mels = dataset_config.N_MELS
 
-        # Configuration parameters
-        self.n_fft = 1024
-        self.hop_length = 512
-        self.n_mels = 100
-
-        # Pre-calculate linear_to_mel_matrix once, as sample_rate and n_fft are constant
-        lower_edge_hertz = 80.0
-        upper_edge_hertz = 7600.0
-
-        # num_spectrogram_bins should be n_fft // 2 + 1 for Mel filterbank
         self._linear_to_mel_matrix = tf.signal.linear_to_mel_weight_matrix(
             num_mel_bins=self.n_mels,
             num_spectrogram_bins=self.n_fft // 2 + 1,
             sample_rate=self.sample_rate,
-            lower_edge_hertz=lower_edge_hertz,
-            upper_edge_hertz=upper_edge_hertz,
+            lower_edge_hertz=dataset_config.LOWER_EDGE_HERTZ,
+            upper_edge_hertz=dataset_config.UPPER_EDGE_HERTZ,
         )
+
+    def _validate_aug_partitions(self, partitions: List[float]):
+        """Validates the user-provided augmentation partition list."""
+        if not isinstance(partitions, list) or len(partitions) != 3:
+            raise ValueError("augmentation_partitions must be a list of three floats.")
+        if not all(isinstance(p, float) and 0.0 <= p <= 1.0 for p in partitions):
+            raise ValueError(
+                "All values in augmentation_partitions must be floats between 0.0 and 1.0."
+            )
+        if sum(partitions) > 1.0:
+            raise ValueError("The sum of augmentation_partitions must not exceed 1.0.")
+
+    @tf.function
+    def _time_warping(self, mel_spectrogram: tf.Tensor) -> tf.Tensor:
+        """Applies time warping to a Mel Spectrogram."""
+        W = dataset_config.AUGMENTATION_PARAMS["W"]
+        time_steps = tf.shape(mel_spectrogram)[0]
+        freq_bins = tf.shape(mel_spectrogram)[1]
+
+        if time_steps <= 2 * W or W == 0:
+            return mel_spectrogram
+
+        w0 = tf.random.uniform(shape=(), minval=W, maxval=time_steps - W, dtype=tf.int32)
+        w = tf.random.uniform(shape=(), minval=-W, maxval=W, dtype=tf.int32)
+
+        part1 = mel_spectrogram[:w0, :]
+        part_to_warp = mel_spectrogram[w0 : w0 + W, :]
+        part3 = mel_spectrogram[w0 + W :, :]
+
+        part_to_warp_4d = tf.expand_dims(tf.expand_dims(part_to_warp, 0), -1)
+        new_width = tf.cast(W, tf.int32) + w
+        if new_width <= 0:
+            return mel_spectrogram
+
+        warped_slice_4d = tf.image.resize(part_to_warp_4d, [new_width, freq_bins])
+        warped_slice = tf.squeeze(warped_slice_4d, [0, -1])
+
+        concatenated = tf.concat([part1, warped_slice, part3], axis=0)
+        concatenated_4d = tf.expand_dims(tf.expand_dims(concatenated, 0), -1)
+        final_warped_4d = tf.image.resize(concatenated_4d, [time_steps, freq_bins])
+
+        return tf.squeeze(final_warped_4d, [0, -1])
+
+    @tf.function
+    def _frequency_masking(self, mel_spectrogram: tf.Tensor) -> tf.Tensor:
+        """Applies frequency masking to a Mel Spectrogram."""
+        F = dataset_config.AUGMENTATION_PARAMS["F"]
+        m_F = dataset_config.AUGMENTATION_PARAMS["m_F"]
+        freq_bins = tf.shape(mel_spectrogram)[1]
+        mean_value = tf.reduce_mean(mel_spectrogram)
+
+        for _ in range(m_F):
+            f = tf.random.uniform(shape=(), minval=0, maxval=F, dtype=tf.int32)
+            f0 = tf.random.uniform(shape=(), minval=0, maxval=freq_bins - f, dtype=tf.int32)
+            mask = tf.one_hot(tf.range(f0, f0 + f), depth=freq_bins, on_value=0.0, off_value=1.0)
+            mask = tf.reduce_prod(mask, axis=0)
+            mask = tf.expand_dims(mask, 0)
+            mel_spectrogram = mel_spectrogram * mask + (1.0 - mask) * mean_value
+        return mel_spectrogram
+
+    @tf.function
+    def _time_masking(self, mel_spectrogram: tf.Tensor) -> tf.Tensor:
+        """Applies time masking to a Mel Spectrogram."""
+        T = dataset_config.AUGMENTATION_PARAMS["T"]
+        p = dataset_config.AUGMENTATION_PARAMS["p"]
+        m_T = dataset_config.AUGMENTATION_PARAMS["m_T"]
+        time_steps = tf.shape(mel_spectrogram)[0]
+        mean_value = tf.reduce_mean(mel_spectrogram)
+
+        for _ in range(m_T):
+            max_mask_width = tf.cast(tf.cast(time_steps, tf.float32) * p, tf.int32)
+            t = tf.random.uniform(
+                shape=(), minval=0, maxval=tf.minimum(T, max_mask_width), dtype=tf.int32
+            )
+            t0 = tf.random.uniform(shape=(), minval=0, maxval=time_steps - t, dtype=tf.int32)
+            mask = tf.one_hot(tf.range(t0, t0 + t), depth=time_steps, on_value=0.0, off_value=1.0)
+            mask = tf.reduce_prod(mask, axis=0)
+            mask = tf.expand_dims(mask, 1)
+            mel_spectrogram = mel_spectrogram * mask + (1.0 - mask) * mean_value
+        return mel_spectrogram
+
+    @tf.function
+    def _apply_augmentations(
+        self, mel_spectrogram: tf.Tensor, char_ids: tf.Tensor, partitions: List[float]
+    ) -> Tuple[tf.Tensor, tf.Tensor]:
+        """Applies a single, randomly selected augmentation based on partition probabilities."""
+        p_warp = tf.cast(partitions[0], tf.float32)
+        p_freq = tf.cast(partitions[1], tf.float32)
+        p_time = tf.cast(partitions[2], tf.float32)
+
+        random_p = tf.random.uniform(shape=[], minval=0.0, maxval=1.0)
+
+        # Use tf.case for mutually exclusive augmentations.
+        # The default case is to return the spectrogram unmodified (clean).
+        augmented_mel_spec = tf.case(
+            [
+                (tf.less(random_p, p_warp), lambda: self._time_warping(mel_spectrogram)),
+                (
+                    tf.logical_and(
+                        tf.greater_equal(random_p, p_warp), tf.less(random_p, p_warp + p_freq)
+                    ),
+                    lambda: self._frequency_masking(mel_spectrogram),
+                ),
+                (
+                    tf.logical_and(
+                        tf.greater_equal(random_p, p_warp + p_freq),
+                        tf.less(random_p, p_warp + p_freq + p_time),
+                    ),
+                    lambda: self._time_masking(mel_spectrogram),
+                ),
+            ],
+            default=lambda: mel_spectrogram,
+            exclusive=True,
+        )
+        return augmented_mel_spec, char_ids
 
     def _load_transcript_file(self, transcript_path: str) -> Dict[str, str]:
         """
@@ -127,22 +229,9 @@ class LibriSpeechDatasetLoader:
 
     @tf.function(input_signature=[tf.TensorSpec((None,), tf.float32)])
     def _audio_to_mel_spectrogram(self, audio: tf.Tensor) -> tf.Tensor:
-        """
-        Converts a raw audio waveform into a Mel Spectrogram.
-
-        Args:
-            audio (tf.Tensor): The raw audio waveform tensor.
-
-        Returns:
-            tf.Tensor: The Mel Spectrogram of the audio.
-        """
-        # Ensure audio is float32 and has a single channel for STFT
         audio = tf.cast(audio, tf.float32)
-        if audio.shape.ndims == 0:  # Handle scalar case if py_function returns scalar
-            audio = tf.expand_dims(audio, axis=0)  # Make it a 1D tensor
-        elif audio.shape.ndims == 2:  # If it's (frames, channels), take the first channel
+        if audio.shape.ndims == 2:
             audio = audio[:, 0]
-
         stft = tf.signal.stft(
             audio,
             frame_length=self.n_fft,
@@ -151,15 +240,9 @@ class LibriSpeechDatasetLoader:
             window_fn=tf.signal.hann_window,
         )
         spectrogram = tf.abs(stft)
-
-        # Use the pre-calculated linear_to_mel_matrix
         mel_spectrogram = tf.tensordot(spectrogram, self._linear_to_mel_matrix, 1)
         mel_spectrogram.set_shape([None, self.n_mels])
-
-        # Apply log for better feature representation
-        # Add a small epsilon to avoid log(0)
-        log_mel_spectrogram = tf.math.log(mel_spectrogram + 1e-6)
-        return log_mel_spectrogram
+        return tf.math.log(mel_spectrogram + 1e-6)
 
     def _text_to_char_ids(self, text: str) -> np.ndarray:
         """
@@ -238,7 +321,10 @@ class LibriSpeechDatasetLoader:
         return mel_spec, char_ids_tensor
 
     def _create_configured_dataset(
-        self, data_pairs: List[Tuple[str, str]], shuffle: bool
+        self,
+        data_pairs: List[Tuple[str, str]],
+        shuffle: bool,
+        augmentation_partitions: List[float] = None,
     ) -> tf.data.Dataset:
         """
         Internal helper method to create and configure a tf.data.Dataset from a list of data pairs.
@@ -256,6 +342,13 @@ class LibriSpeechDatasetLoader:
         if shuffle:
             ds = ds.shuffle(buffer_size=len(data_pairs) if len(data_pairs) > 0 else 1024)
         ds = ds.map(self._load_and_preprocess_sample, num_parallel_calls=tf.data.AUTOTUNE)
+
+        if augmentation_partitions is not None:
+            self._validate_aug_partitions(augmentation_partitions)
+            ds = ds.map(
+                lambda mel, ids: self._apply_augmentations(mel, ids, augmentation_partitions),
+                num_parallel_calls=tf.data.AUTOTUNE,
+            )
 
         padding_values_tuple = (
             tf.constant(0.0, dtype=tf.float32),
@@ -288,75 +381,59 @@ class LibriSpeechDatasetLoader:
         ).prefetch(buffer_size=tf.data.AUTOTUNE)
         return ds
 
-    def get_dataset(self, split: str, shuffle: bool) -> tf.data.Dataset:
+    def get_dataset(
+        self, split: str, shuffle: bool, augmentation_partitions: List[float] = None
+    ) -> tf.data.Dataset:
         """
-        Loads and preprocesses a specified split of the LibriSpeech dataset,
-        returning a single dataset in the ((mel_spec, true_char_ids), true_char_ids) format.
+        Loads a specified split, returning a single tf.data.Dataset.
 
         Args:
             split (str): The name of the data split (e.g., "dev-clean").
             shuffle (bool): Whether to shuffle the dataset.
-
-        Returns:
-            tf.data.Dataset: A single tf.data.Dataset object, formatted as
-                             ((mel_spec, true_char_ids), true_char_ids).
+            augmentation_partitions (List[float], optional): A list of three floats
+                representing the probabilities for [time_warp, freq_mask, time_mask].
+                Defaults to None (no augmentation).
         """
         all_data_pairs = self._get_audio_transcript_paths(split)
-        return self._create_configured_dataset(all_data_pairs, shuffle)
+        return self._create_configured_dataset(all_data_pairs, shuffle, augmentation_partitions)
 
     def get_partitioned_datasets(
-        self, split: str, partitions: List[float], shuffle: bool
+        self,
+        split: str,
+        partitions: List[float],
+        shuffle: bool,
+        augmentation_partitions: List[float] = None,
     ) -> List[tf.data.Dataset]:
         """
-        Loads and preprocesses a specified split of the LibriSpeech dataset,
-        returning a list of datasets partitioned using a list of floating point numbers.
-        All returned datasets are in the ((mel_spec, true_char_ids), true_char_ids) format.
-
-        Args:
-            split (str): The name of the data split (e.g., "train-clean-100").
-            partitions (List[float]): A list of floats (0, 1] representing the percentage
-                                      of the original split for each partition. Sum must be approx 1.0.
-            shuffle (bool): Whether to shuffle each partitioned dataset.
-
-        Returns:
-            List[tf.data.Dataset]: A list of tf.data.Dataset objects.
+        Loads and partitions a split, returning a list of tf.data.Dataset objects.
         """
         if not all(isinstance(p, (int, float)) and 0 < p <= 1 for p in partitions):
-            raise ValueError("Partitions must be a list of floats (0, 1] representing percentages.")
-        if abs(sum(partitions) - 1.0) > 1e-6:  # Check if sum is approximately 1.0
+            raise ValueError("Partitions must be a list of floats (0, 1].")
+        if abs(sum(partitions) - 1.0) > 1e-6:
             raise ValueError("Sum of partitions must be approximately 1.0.")
 
         all_data_pairs = self._get_audio_transcript_paths(split)
-        total_samples = len(all_data_pairs)
-        partitioned_datasets = []
-        current_idx = 0
-
-        # Shuffle the *entire* list of data pairs once before partitioning to ensure
-        # that samples are randomly distributed across partitions.
         if shuffle:
             random.shuffle(all_data_pairs)
 
+        partitioned_datasets = []
+        current_idx = 0
+        total_samples = len(all_data_pairs)
+
         for i, percentage in enumerate(partitions):
-            num_samples_for_partition = int(total_samples * percentage)
+            num_samples = int(total_samples * percentage)
             if i == len(partitions) - 1:
-                # Ensure the last partition gets all remaining samples due to potential rounding
-                num_samples_for_partition = total_samples - current_idx
+                num_samples = total_samples - current_idx
 
-            partition_data_pairs = all_data_pairs[
-                current_idx : current_idx + num_samples_for_partition
-            ]
-            current_idx += num_samples_for_partition
+            partition_data = all_data_pairs[current_idx : current_idx + num_samples]
+            current_idx += num_samples
 
-            if not partition_data_pairs:
-                print(
-                    f"Warning: Partition {i + 1} ({percentage * 100:.1f}%) resulted in 0 samples. "
-                    "Consider adjusting batch_size or partition percentages for small datasets."
-                )
-                # Return an empty but correctly shaped dataset if a partition has no samples
-                empty_ds = self._create_configured_dataset([], shuffle=False)
-                partitioned_datasets.append(empty_ds)
+            if not partition_data:
+                print(f"Warning: Partition {i+1} has 0 samples.")
+                partitioned_datasets.append(self._create_configured_dataset([], shuffle=False))
                 continue
+
             partitioned_datasets.append(
-                self._create_configured_dataset(partition_data_pairs, shuffle)
+                self._create_configured_dataset(partition_data, shuffle, augmentation_partitions)
             )
         return partitioned_datasets

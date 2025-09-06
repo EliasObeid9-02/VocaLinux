@@ -2,8 +2,8 @@
 This module contains the main function for interpreting spoken commands.
 """
 
-from interpreter.path_resolver import PathResolver
-from interpreter.translator import Translator
+from VocaLinux.interpreter.path_resolver import PathResolver
+from VocaLinux.interpreter.translator import Translator
 
 
 def interpret_command(transcript: str) -> str:

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Bidirectional, Layer, LayerNormalization
 
-from model.layers.pblstm import PBLSTMLayer
+from VocaLinux.model.layers.pblstm import PBLSTMLayer
 
 
 class Listener(Layer):
@@ -13,7 +13,7 @@ class Listener(Layer):
     2. Three stacked pBLSTM layers on top, each reducing time resolution by a factor of 2.
     """
 
-    def __init__(self, lstm_units: int = 256, num_pblstm_layers: int = 3, name: str = "listener"):
+    def __init__(self, lstm_units: int, num_pblstm_layers: int, name: str = "listener"):
         """
         Initializes the Listener.
 

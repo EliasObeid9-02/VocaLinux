@@ -3,9 +3,9 @@ from typing import List
 import tensorflow as tf
 from tensorflow.keras import Model
 
-from model.layers.listener import Listener
-from model.layers.speller import Speller
-from model.vocabulary import VOCAB_SIZE
+from VocaLinux.model.layers.listener import Listener
+from VocaLinux.model.layers.speller import Speller
+from VocaLinux.configs import model as model_config
 
 
 class LASModel(Model):
@@ -17,15 +17,6 @@ class LASModel(Model):
 
     def __init__(
         self,
-        listener_lstm_units: int = 256,
-        num_pblstm_layers: int = 3,
-        speller_lstm_units: int = 512,
-        num_decoder_lstm_layers: int = 2,
-        attention_units: int = 512,
-        output_vocab_size: int = VOCAB_SIZE,
-        embedding_dim: int = 256,
-        sampling_probability: float = 0.1,
-        beam_width: int = 32,
         name: str = "las_model",
         **kwargs,
     ):
@@ -33,34 +24,25 @@ class LASModel(Model):
         Initializes the LASModel.
 
         Args:
-            listener_lstm_units (int): Number of LSTM units per direction for Listener's LSTMs.
-            num_pblstm_layers (int): Number of pBLSTM layers in the Listener.
-            speller_lstm_units (int): Number of LSTM units for each Speller's LSTM layer.
-            num_decoder_lstm_layers (int): Number of stacked LSTM layers in the Speller.
-            attention_units (int): Dimension for the MLPs in the AttentionContext layer.
-            output_vocab_size (int): Size of the output character vocabulary.
-            embedding_dim (int): Dimension of the character embedding in the Speller.
-            sampling_probability (float): Probability of using the model's own prediction
-                                          instead of ground truth during training.
             name (str): Name of the model.
             **kwargs: Additional keyword arguments for the Model base class.
         """
         super().__init__(name=name, **kwargs)
 
         self.listener = Listener(
-            lstm_units=listener_lstm_units,
-            num_pblstm_layers=num_pblstm_layers,
+            lstm_units=model_config.LISTENER_LSTM_UNITS,
+            num_pblstm_layers=model_config.NUM_PBLSTM_LAYERS,
             name="las_listener",
         )
 
         self.speller = Speller(
-            lstm_units=speller_lstm_units,
-            num_decoder_lstm_layers=num_decoder_lstm_layers,
-            attention_units=attention_units,
-            output_vocab_size=output_vocab_size,
-            embedding_dim=embedding_dim,
-            sampling_probability=sampling_probability,
-            beam_width=beam_width,
+            lstm_units=model_config.SPELLER_LSTM_UNITS,
+            num_decoder_lstm_layers=model_config.NUM_DECODER_LSTM_LAYERS,
+            attention_units=model_config.ATTENTION_UNITS,
+            output_vocab_size=model_config.OUTPUT_VOCAB_SIZE,
+            embedding_dim=model_config.EMBEDDING_DIM,
+            sampling_probability=model_config.SAMPLING_PROBABILITY,
+            beam_width=model_config.BEAM_WIDTH,
             name="las_speller",
         )
 

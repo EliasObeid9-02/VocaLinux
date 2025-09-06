@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from interpreter.path_resolver import PathResolver
+from VocaLinux.interpreter.path_resolver import PathResolver
 
 
 class PathResolverTest(unittest.TestCase):
@@ -11,7 +11,7 @@ class PathResolverTest(unittest.TestCase):
         self.resolver = PathResolver()
         self.original_cwd = os.getcwd()
         # Assuming the test is run from the project root directory
-        self.project_root = "/home/elias/Coding/Software-Development/speech_to_linux_commands"
+        self.project_root = "/home/elias/Coding/Projects/VocaLinux"
         os.chdir(self.project_root)
 
     def tearDown(self):

@@ -1,6 +1,6 @@
 import unittest
 
-from interpreter.translator import Translator
+from VocaLinux.interpreter.translator import Translator
 
 
 class TranslatorTest(unittest.TestCase):
