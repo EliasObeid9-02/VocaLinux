@@ -110,6 +110,18 @@ wheels = [
 ]
 
 [[package]]
+name = "click"
+version = "8.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342, upload-time = "2025-05-20T23:19:49.832Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/32/10bb5764d90a8eee674e9dc6f4db6a0ab47c8c4d0d83c27f7c39ac415a4d/click-8.2.1-py3-none-any.whl", hash = "sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b", size = 102215, upload-time = "2025-05-20T23:19:47.796Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -367,6 +379,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cf/8c/f834fbf984f691b4f7ff60f50b514cc3de5cc08abfc3295564dd89c5e2e7/importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c", size = 44693, upload-time = "2025-01-03T18:51:56.698Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/ed/1f1afb2e9e7f38a545d628f864d562a5ae64fe6f7a10e28ffb9b185b4e89/importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec", size = 37461, upload-time = "2025-01-03T18:51:54.306Z" },
+]
+
+[[package]]
+name = "jiwer"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "rapidfuzz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/12/1e/963dfc249d5bbe88079b57a22556e981ddd9208e4b6116e48bdbfc01f26b/jiwer-4.0.0.tar.gz", hash = "sha256:ae9c051469102a61ef0927100baeeb4546f78d180c9b0948281d08eaf44c191e", size = 28074, upload-time = "2025-06-19T16:05:23.004Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/69/c9/172c525330c739a068c01050759a6f855ce16212db10a0359e690a03ac48/jiwer-4.0.0-py3-none-any.whl", hash = "sha256:7efaf0bd336b095d99ddef9dd67e1ee829d75d58aa2a81d9639870b01d6d95ea", size = 23034, upload-time = "2025-06-19T16:05:21.821Z" },
 ]
 
 [[package]]
@@ -838,6 +863,32 @@ wheels = [
 ]
 
 [[package]]
+name = "rapidfuzz"
+version = "3.14.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/11/0de727b336f28e25101d923c9feeeb64adcf231607fe7e1b083795fa149a/rapidfuzz-3.14.0.tar.gz", hash = "sha256:672b6ba06150e53d7baf4e3d5f12ffe8c213d5088239a15b5ae586ab245ac8b2", size = 58073448, upload-time = "2025-08-27T13:41:31.541Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/66/6b4aa4c63d9b22a9851a83f3ed4b52e127a1f655f80ecc4894f807a82566/rapidfuzz-3.14.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:6501e49395ad5cecf1623cb4801639faa1c833dbacc07c26fa7b8f7fa19fd1c0", size = 2011991, upload-time = "2025-08-27T13:39:02.27Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/b8/a79e997baf4f4467c8428feece5d7b9ac22ff0918ebf793ed247ba5a3f3a/rapidfuzz-3.14.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9c3cd9b8d5e159c67d242f80cae1b9d9b1502779fc69fcd268a1eb7053f58048", size = 1458900, upload-time = "2025-08-27T13:39:03.777Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/82/6ca7ebc66d0dd1330e92d08a37412c705d7366216bddd46ca6afcabaa6a0/rapidfuzz-3.14.0-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a578cadbe61f738685ffa20e56e8346847e40ecb033bdc885373a070cfe4a351", size = 1484735, upload-time = "2025-08-27T13:39:05.502Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/5d/26eb60bc8eea194a03b32fdd9a4f5866fa9859dcaedf8da1f256dc9a47fc/rapidfuzz-3.14.0-cp311-cp311-manylinux_2_26_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:b5b46340872a1736544b23f3c355f292935311623a0e63a271f284ffdbab05e4", size = 1806075, upload-time = "2025-08-27T13:39:07.109Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/9c/12f2af41750ae4f30c06d5de1e0f3c4a5f55cbea9dabf3940a096cd8580a/rapidfuzz-3.14.0-cp311-cp311-manylinux_2_26_s390x.manylinux_2_28_s390x.whl", hash = "sha256:238422749da213c3dfe36397b746aeda8579682e93b723a1e77655182198e693", size = 2358269, upload-time = "2025-08-27T13:39:08.796Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/3b/3c1839d51d1dfa768c8274025a36eedc177ed5b43a9d12cc7d91201eca03/rapidfuzz-3.14.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:83f3ad0e7ad3cf1138e36be26f4cacb7580ac0132b26528a89e8168a0875afd8", size = 3313513, upload-time = "2025-08-27T13:39:10.44Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/47/ed1384c7c8c39dc36de202860373085ee9c43493d6e9d7bab654d2099da0/rapidfuzz-3.14.0-cp311-cp311-manylinux_2_31_armv7l.whl", hash = "sha256:7c34e34fb7e01aeea1e84192cf01daf1d56ccc8a0b34c0833f9799b341c6d539", size = 1320968, upload-time = "2025-08-27T13:39:12.024Z" },
+    { url = "https://files.pythonhosted.org/packages/16/0b/3d7458160b5dfe230b05cf8bf62505bf4e2c6d73782dd37248149b43e130/rapidfuzz-3.14.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:a58bbbbdd2a150c76c6b3af5ac2bbe9afcff26e6b17e1f60b6bd766cc7094fcf", size = 2507138, upload-time = "2025-08-27T13:39:13.584Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/e5/8df797e4f3df2cc308092c5437dda570aa75ea5e5cc3dc1180165fce2332/rapidfuzz-3.14.0-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:d0e50b4bea57bfcda4afee993eef390fd8f0a64981c971ac4decd9452143892d", size = 2629575, upload-time = "2025-08-27T13:39:15.624Z" },
+    { url = "https://files.pythonhosted.org/packages/89/f9/e87e94cd6fc22e19a21b44030161b9e9680b5127bcea97aba05be506b66f/rapidfuzz-3.14.0-cp311-cp311-musllinux_1_2_ppc64le.whl", hash = "sha256:357eb9d394bfc742d3528e8bb13afa9baebc7fbe863071975426b47fc21db220", size = 2919216, upload-time = "2025-08-27T13:39:17.313Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/6e/f20154e8cb7a7c9938241aff7ba0477521bee1f57a57c78706664390a558/rapidfuzz-3.14.0-cp311-cp311-musllinux_1_2_s390x.whl", hash = "sha256:fb960ec526030077658764a309b60e907d86d898f8efbe959845ec2873e514eb", size = 3435208, upload-time = "2025-08-27T13:39:18.942Z" },
+    { url = "https://files.pythonhosted.org/packages/43/43/c2d0e17f75ded0f36ee264fc719f67de3610628d983769179e9d8a44c7db/rapidfuzz-3.14.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:6bedb19db81d8d723cc4d914cb079d89ff359364184cc3c3db7cef1fc7819444", size = 4428371, upload-time = "2025-08-27T13:39:20.628Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/d7/41f645ad06494a94bafb1be8871585d5723a1f93b34929022014f8f03fef/rapidfuzz-3.14.0-cp311-cp311-win32.whl", hash = "sha256:8dba3d6e10a34aa255a6f6922cf249f8d0b9829e6b00854e371d803040044f7f", size = 1839290, upload-time = "2025-08-27T13:39:22.396Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/96/c783107296403cf50acde118596b07aa1af4b0287ac4600b38b0673b1fd7/rapidfuzz-3.14.0-cp311-cp311-win_amd64.whl", hash = "sha256:ce79e37b23c1cbf1dc557159c8f20f6d71e9d28aef63afcf87bcb58c8add096a", size = 1661571, upload-time = "2025-08-27T13:39:24.03Z" },
+    { url = "https://files.pythonhosted.org/packages/00/9e/8c562c5d78e31085a07ff1332329711030dd2c25b84c02fb10dcf9be1f64/rapidfuzz-3.14.0-cp311-cp311-win_arm64.whl", hash = "sha256:e140ff4b5d0ea386b998137ddd1335a7bd4201ef987d4cb5a48c3e8c174f8aec", size = 875433, upload-time = "2025-08-27T13:39:26.25Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/ed/5b83587b6a6bfe7845ed36286fd5780c00ba93c56463bd501b44617f427b/rapidfuzz-3.14.0-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:e5d610a2c5efdb2a3f9eaecac4ecd6d849efb2522efa36000e006179062056dc", size = 1888611, upload-time = "2025-08-27T13:41:24.326Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/d9/9332a39587a2478470a54218d5f85b5a29b6b3eb02b2310689b59ad3da11/rapidfuzz-3.14.0-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:c053cad08ab872df4e201daacb66d7fd04b5b4c395baebb193b9910c63ed22ec", size = 1363908, upload-time = "2025-08-27T13:41:26.463Z" },
+    { url = "https://files.pythonhosted.org/packages/21/7f/c90f55402b5b43fd5cff42a8dab60373345b8f2697a7b83515eb62666913/rapidfuzz-3.14.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:7e52ac8a458b2f09291fa968b23192d6664c7568a43607de2a51a088d016152d", size = 1555592, upload-time = "2025-08-27T13:41:28.583Z" },
+]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 source = { registry = "https://pypi.org/simple" }
@@ -980,6 +1031,7 @@ name = "speech-to-linux-commands"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "jiwer" },
     { name = "librosa" },
     { name = "matplotlib" },
     { name = "multiprocess" },
@@ -991,6 +1043,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "jiwer", specifier = "==4.0.0" },
     { name = "librosa", specifier = "==0.11" },
     { name = "matplotlib", specifier = "==3.7.2" },
     { name = "multiprocess", specifier = "==0.70.15" },
