@@ -62,23 +62,10 @@ DIGIT_WORDS: Dict[str, str] = {
     "nine": "9",
 }
 
-ACCEPTED_COMMANDS: List[str] = [
-    "echo",
-    "touch",
-    "ls",
-    "cd",
-    "mv",
-    "cp",
-    "rm",
-    "mkdir",
-    "rmdir",
-]
-
 VOCABULARY: List[str] = (
     list(PHONETIC_ALPHABET.keys())
     + list(SPECIAL_CHARS.keys())
     + list(DIGIT_WORDS.keys())
-    + ACCEPTED_COMMANDS
 )
 
 MAPPINGS: Dict[str, str] = {

@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from VocaLinux.interpreter.config import MAPPINGS
+from VocaLinux.configs.interpreter import MAPPINGS
 
 
 class Translator:
