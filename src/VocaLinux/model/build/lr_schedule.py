@@ -1,18 +1,17 @@
+"""Custom learning rate schedules for TensorFlow models."""
+
 import numpy as np
 import tensorflow as tf
 
 
 class WarmupHoldDecaySchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
-    """
-    Custom learning rate scheduler that implements a warm-up, hold, and decay phase.
+    """Custom learning rate scheduler that implements a warm-up, hold, and decay phase.
     This is similar to the schedule described in "Attention Is All You Need".
 
     The schedule is as follows:
-    1.  **Warm-up:** Linearly increases the learning rate from 0 to `peak_learning_rate`
-        over `warmup_steps`.
-    2.  **Hold:** Keeps the learning rate at `peak_learning_rate` for a set number of steps.
-    3.  **Decay:** Smoothly decreases the learning rate using a cosine decay function
-        until it reaches a minimum value.
+    1. Warm-up: Linearly increases the learning rate from 0 to `peak_learning_rate` over `warmup_steps`.
+    2. Hold: Keeps the learning rate at `peak_learning_rate` for a set number of steps.
+    3. Decay: Smoothly decreases the learning rate using a cosine decay function until it reaches a minimum value.
     """
 
     def __init__(
@@ -23,17 +22,14 @@ class WarmupHoldDecaySchedule(tf.keras.optimizers.schedules.LearningRateSchedule
         hold_steps: int = 0,
         min_learning_rate: float = 0.0,
     ):
-        """
-        Initializes the learning rate scheduler.
+        """Initializes the learning rate scheduler.
 
         Args:
             peak_learning_rate (float): The maximum learning rate to reach after warm-up.
             warmup_steps (int): The number of steps for the warm-up phase.
             total_steps (int): The total number of training steps.
-            hold_steps (int): The number of steps to hold the peak learning rate.
-                               Defaults to 0.
-            min_learning_rate (float): The final minimum learning rate after decay.
-                                       Defaults to 0.0.
+            hold_steps (int): The number of steps to hold the peak learning rate. Defaults to 0.
+            min_learning_rate (float): The final minimum learning rate after decay. Defaults to 0.0.
         """
         super().__init__()
         self.peak_learning_rate = peak_learning_rate
@@ -49,8 +45,7 @@ class WarmupHoldDecaySchedule(tf.keras.optimizers.schedules.LearningRateSchedule
             )
 
     def __call__(self, step: int | tf.Tensor) -> tf.Tensor:
-        """
-        Calculates the learning rate for a given step.
+        """Calculates the learning rate for a given step.
 
         Args:
             step (tf.Tensor): The current training step (a scalar tensor).
@@ -89,8 +84,14 @@ class WarmupHoldDecaySchedule(tf.keras.optimizers.schedules.LearningRateSchedule
 
         return learning_rate
 
-    def get_config(self):
-        """Allows the scheduler to be serialized."""
+    def get_config(self) -> dict:
+        """Returns a dictionary of the scheduler's configuration parameters.
+
+        This allows the scheduler to be serialized and deserialized.
+
+        Returns:
+            dict: A dictionary containing the configuration of the scheduler.
+        """
         return {
             "peak_learning_rate": self.peak_learning_rate,
             "warmup_steps": self.warmup_steps,
