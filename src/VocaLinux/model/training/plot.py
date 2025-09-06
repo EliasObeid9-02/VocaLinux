@@ -184,16 +184,3 @@ def create_training_plots(filepath: str):
     )
     plt.tight_layout()
     return fig
-
-
-try:
-    file = history_file if showcase_mode else history_save_location
-    fig = create_training_plots(file)
-    if showcase_mode:
-        plt.show()
-    else:
-        fig.savefig(plot_save_path, dpi=300, bbox_inches="tight")
-        plt.close()
-        print(f"Plot saved to {plot_save_path}")
-except Exception as e:
-    print(f"Error: {e}")

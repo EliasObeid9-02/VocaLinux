@@ -32,7 +32,6 @@ def ids_to_text(id_list: Union[list, np.ndarray, tf.Tensor]) -> str:
         id_list = id_list.numpy()  # Convert TensorFlow tensor to numpy array
 
     decoded_chars = []
-    ignored_tokens = [PAD_TOKEN, UNK_TOKEN, SOS_TOKEN, EOS_TOKEN]
     for idx in id_list:
         if idx == EOS_TOKEN:
             break

@@ -1,3 +1,6 @@
+import tensorflow as tf
+from VocaLinux.model.vocabulary import ids_to_text
+
 if evaluate_mode:
     print("--- Testing Results ---")
     res = model.evaluate(

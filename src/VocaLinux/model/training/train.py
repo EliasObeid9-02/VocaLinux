@@ -1,6 +1,11 @@
+import json
 import os
 
-from callbacks import HistoryCallback, ScheduledSamplingCallback
+import tensorflow as tf
+from VocaLinux.model.training.callbacks import (
+    HistoryCallback,
+    ScheduledSamplingCallback,
+)
 
 epochs = 10
 init_epoch = 0
@@ -11,7 +16,7 @@ history_file = "/kaggle/input/tensorflow-listen-attend-and-spell/history.json"
 
 if os.path.exists(history_file):
     try:
-        with open(history_file, 'r') as f:
+        with open(history_file, "r") as f:
             loaded_history_data = json.load(f)
             loaded_epoch = loaded_history_data.get("last_completed_epoch")
             if loaded_epoch is not None:
@@ -24,7 +29,7 @@ if os.path.exists(history_file):
 
 training_mode = True
 evaluate_mode = True
-showcase_mode = False # whether to plot the loss/accuracy over batches
+showcase_mode = False  # whether to plot the loss/accuracy over batches
 
 
 # Ramp up/stabilize cycle sampling parameters
@@ -40,7 +45,6 @@ warmup_epochs: int = 100
 if training_mode:
     history_callback = HistoryCallback(100)
 
-
     scheduled_sampling_callback = ScheduledSamplingCallback(
         start_prob=start_prob,
         end_prob=end_prob,
@@ -55,7 +59,7 @@ if training_mode:
         callbacks=[
             history_callback,
             scheduled_sampling_callback,
-  k          tf.keras.callbacks.TerminateOnNaN(),
+            tf.keras.callbacks.TerminateOnNaN(),
         ],
         verbose=0,
     )

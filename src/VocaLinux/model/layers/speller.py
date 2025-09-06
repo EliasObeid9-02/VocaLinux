@@ -3,8 +3,8 @@ from typing import List
 import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Dense, Embedding, Layer, LayerNormalization
 
-from VocaLinux.model.layers.attention import AttentionContext
-from VocaLinux.model.vocabulary import EOS_TOKEN, SOS_TOKEN, VOCAB_SIZE
+from VocaLinux.model.layers.attention import LocationAwareAttention
+from VocaLinux.model.vocabulary import EOS_TOKEN, SOS_TOKEN
 
 
 class Speller(Layer):
@@ -121,7 +121,7 @@ class Speller(Layer):
             self.decoder_layer_norms.append(
                 LayerNormalization(name=f"speller_lstm_layer_norm_{i+1}")
             )
-        self.attention_context = AttentionContext(attention_units=self.attention_units)
+        self.attention = LocationAwareAttention(attention_units=self.attention_units)
 
         # MLP layer to predict the character distribution (logits) over the vocabulary.
         self.character_distribution_mlp = Dense(
@@ -202,13 +202,16 @@ class Speller(Layer):
         # The decoder state: equation (7) is typically the hidden state (h_state)
         # of the LAST LSTM layer in the stack for the current time step.
         current_decoder_hidden_state = new_decoder_lstm_hidden_states[-1]
-        current_context = self.attention_context([current_decoder_hidden_state, encoder_outputs])
+        current_context, attention_weights = self.attention(
+            [current_decoder_hidden_state, encoder_outputs, prev_attention_weights]
+        )
         prediction_input = tf.concat([current_decoder_hidden_state, current_context], axis=-1)
         raw_logits = self.character_distribution_mlp(prediction_input)
         softmax_probabilities = tf.nn.softmax(raw_logits, axis=-1)
         return (
             softmax_probabilities,
             current_context,
+            attention_weights,
             tf.stack(new_decoder_lstm_hidden_states),
             tf.stack(new_decoder_lstm_cell_states),
         )
@@ -226,6 +229,7 @@ class Speller(Layer):
             for _ in range(self.num_decoder_lstm_layers)
         ]
         context_vector = tf.zeros((batch_size, tf.shape(encoder_outputs)[-1]))
+        attention_weights = tf.zeros((batch_size, tf.shape(encoder_outputs)[1]))
 
         for t in range(max_decode_len):
             last_token = decoded_sequence[:, -1]
@@ -234,11 +238,13 @@ class Speller(Layer):
             (
                 softmax_probs,
                 context_vector,
+                attention_weights,
                 new_h_states,
                 new_c_states,
             ) = self._decoder_step(
                 char_embedding,
                 context_vector,
+                attention_weights,
                 tf.stack([s[0] for s in decoder_states]),
                 tf.stack([s[1] for s in decoder_states]),
                 encoder_outputs,
@@ -283,6 +289,9 @@ class Speller(Layer):
             for _ in range(self.num_decoder_lstm_layers)
         ]
         context_vector = tf.zeros((batch_size * self.beam_width, tf.shape(encoder_outputs)[-1]))
+        attention_weights = tf.zeros(
+            (batch_size * self.beam_width, tf.shape(flat_encoder_outputs)[1])
+        )
 
         for t in range(max_decode_len):
             last_tokens = tf.reshape(beams[:, :, -1], [-1])
@@ -294,11 +303,13 @@ class Speller(Layer):
             (
                 softmax_probs,
                 context_vector,
+                attention_weights,
                 new_h_states,
                 new_c_states,
             ) = self._decoder_step(
                 char_embedding,
                 context_vector,
+                attention_weights,
                 tf.stack([s[0] for s in decoder_states]),
                 tf.stack([s[1] for s in decoder_states]),
                 flat_encoder_outputs,
@@ -333,6 +344,11 @@ class Speller(Layer):
 
             context_vector = tf.gather(context_vector, flat_beam_indices)
             context_vector = tf.reshape(context_vector, [-1, tf.shape(encoder_outputs)[-1]])
+
+            attention_weights = tf.gather(attention_weights, flat_beam_indices)
+            attention_weights = tf.reshape(
+                attention_weights, [-1, tf.shape(flat_encoder_outputs)[1]]
+            )
 
             # Update the beams by gathering the previous beams and appending the new tokens
             new_tokens = tf.cast(
@@ -380,12 +396,16 @@ class Speller(Layer):
 
         encoder_feature_dim = encoder_outputs.shape[-1]
         initial_context = tf.zeros((batch_size, encoder_feature_dim), dtype=tf.float32)
+        initial_attention_weights = tf.zeros(
+            (batch_size, tf.shape(encoder_outputs)[1]), dtype=tf.float32
+        )
 
         # This is a placeholder as there are no previous logits at time step 0.
         initial_logits_dummy = tf.zeros((batch_size, self.output_vocab_size), dtype=tf.float32)
         initial_scan_state = (
             initial_logits_dummy,
             initial_context,
+            initial_attention_weights,
             initial_hidden_states,
             initial_cell_states,
         )
@@ -397,16 +417,17 @@ class Speller(Layer):
 
             Args:
                 state (Tuple[tf.Tensor, ...]): The current state of the decoder from the previous time step,
-                                               containing: (prev_logits, prev_context, hidden_states, cell_states).
+                                               containing: (prev_logits, prev_context, prev_attention_weights, hidden_states, cell_states).
                 current_time_step_idx (tf.Tensor): The current time step index (scalar).
 
             Returns:
                 Tuple[tf.Tensor, ...]: The updated state for the next iteration of scan,
-                                       containing: (current_logits, current_context, new_hidden_states, new_cell_states).
+                                       containing: (current_logits, current_context, current_attention_weights, new_hidden_states, new_cell_states).
             """
             (
                 prev_logits,
                 prev_context_scan,
+                prev_attention_weights_scan,
                 decoder_lstm_hidden_states_scan,
                 decoder_lstm_cell_states_scan,
             ) = state
@@ -448,12 +469,14 @@ class Speller(Layer):
             Returns the following
                 logits,
                 current_context_output,
+                current_attention_weights,
                 new_decoder_lstm_hidden_states,
                 new_decoder_lstm_cell_states,
             """
             return self._decoder_step(
                 prev_char_embedding,
                 prev_context_scan,
+                prev_attention_weights_scan,
                 decoder_lstm_hidden_states_scan,
                 decoder_lstm_cell_states_scan,
                 encoder_outputs,

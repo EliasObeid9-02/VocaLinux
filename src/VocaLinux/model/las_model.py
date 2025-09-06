@@ -3,9 +3,9 @@ from typing import List
 import tensorflow as tf
 from tensorflow.keras import Model
 
+from VocaLinux.configs import model as model_config
 from VocaLinux.model.layers.listener import Listener
 from VocaLinux.model.layers.speller import Speller
-from VocaLinux.configs import model as model_config
 
 
 class LASModel(Model):
