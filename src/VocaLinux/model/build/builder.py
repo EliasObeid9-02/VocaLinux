@@ -7,6 +7,7 @@ resetting its optimizer state, and to load a previously saved model from a file.
 from typing import cast, Optional
 import tensorflow as tf
 
+from VocaLinux.model.layers import PBLSTMLayer, Listener, LocationAwareAttention, Speller
 from VocaLinux.configs import training as training_config, dataset as dataset_config
 from VocaLinux.model.build.loss import safe_sparse_categorical_crossentropy
 from VocaLinux.model.build.metrics import CharacterErrorRate, WordErrorRate
@@ -23,6 +24,7 @@ def _compile_model(model: LASModel, strategy: Optional[tf.distribute.Strategy] =
         model (LASModel): The LASModel instance to compile.
         strategy (Optional[tf.distribute.Strategy]): The distribution strategy to use for compilation.
     """
+
     def compile_fn():
         loss = safe_sparse_categorical_crossentropy
         optimizer = tf.keras.optimizers.Adam(
@@ -62,6 +64,7 @@ def create_model_from_scratch(strategy: Optional[tf.distribute.Strategy] = None)
     Returns:
         LASModel: A newly created and compiled LAS model.
     """
+
     def model_fn():
         return LASModel()
 
@@ -90,7 +93,9 @@ def rebuild_model(model: LASModel, strategy: Optional[tf.distribute.Strategy] = 
     return model
 
 
-def load_model_from_file(filepath: str, strategy: Optional[tf.distribute.Strategy] = None) -> LASModel:
+def load_model_from_file(
+    filepath: str, strategy: Optional[tf.distribute.Strategy] = None
+) -> LASModel:
     """Loads and compiles a Listen, Attend, and Spell (LAS) model from a saved file.
 
     Args:
@@ -101,8 +106,11 @@ def load_model_from_file(filepath: str, strategy: Optional[tf.distribute.Strateg
         LASModel: The loaded and recompiled LAS model.
     """
     custom_objects = {
+        "PBLSTMLayer": PBLSTMLayer,
+        "Listener": Listener,
+        "LocationAwareAttention": LocationAwareAttention,
+        "Speller": Speller,
         "LASModel": LASModel,
-        "safe_sparse_categorical_crossentropy": safe_sparse_categorical_crossentropy,
         "CharacterErrorRate": CharacterErrorRate,
         "WordErrorRate": WordErrorRate,
     }
