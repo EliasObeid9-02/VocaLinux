@@ -1,186 +1,154 @@
-import json
+"""This module provides utilities for plotting training history from a Keras History object.
+
+It includes functions to generate and save plots for loss, accuracy, Character Error Rate (CER),
+and Word Error Rate (WER), including training, validation, and sampling probability curves.
+"""
+
+import os
+from typing import Dict, Any
 
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 import numpy as np
+import tensorflow as tf
 
 
-def create_training_plots(filepath: str):
-    """
-    Creates matplotlib plots from training history but doesn't show/save them.
-    Returns the figure object and the data used for plotting.
+# --- Configuration ---
+# Use a professional plot style
+style.use("seaborn-v0_8-whitegrid")
+# Define a color palette for consistency
+colors = {
+    "training": "#00529B",  # A strong, professional blue
+    "validation": "#D81B60",  # A vibrant, attention-grabbing magenta/red
+    "sampling_prob": "#4E4E4E",  # A dark, contrasting gray
+    "text": "#000000",
+}
+
+
+def plot_and_save_metric(
+    epochs: np.ndarray,
+    history_dict: Dict[str, Any],
+    train_key: str,
+    val_key: str,
+    title: str,
+    y_label: str,
+    output_dir: str,
+) -> None:
+    """Generic function to create, style, and save a single plot for a given metric.
+
+    Includes a secondary y-axis for sampling probability if available in history_dict.
 
     Args:
-        filepath (str): Path to the JSON history file
-
-    Returns:
-        fig: matplotlib figure
+        epochs (np.ndarray): Array of epoch numbers.
+        history_dict (Dict[str, Any]): Dictionary containing training history data.
+        train_key (str): Key for the training metric in history_dict (e.g., 'loss').
+        val_key (str): Key for the validation metric in history_dict (e.g., 'val_loss').
+        title (str): Title of the plot.
+        y_label (str): Label for the primary y-axis.
+        output_dir (str): Directory to save the plot image.
     """
-    try:
-        with open(filepath, "r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"File not found at {filepath}")
-    except json.JSONDecodeError:
-        raise ValueError(f"Could not decode JSON from {filepath}")
-    except Exception as e:
-        raise RuntimeError(f"Error reading file: {e}")
+    fig, ax = plt.subplots(figsize=(12, 7))
 
-    epochs_data = data.get("epochs", [])
-    if not epochs_data:
-        raise ValueError("No epoch data found in the JSON file.")
+    # Primary axis for the main metric
+    ax.set_title(title, fontsize=16, weight="bold")
+    ax.set_xlabel("Epoch", fontsize=12)
+    ax.set_ylabel(y_label, fontsize=12, color=colors["text"])
+    ax.tick_params(axis="y", labelcolor=colors["training"])
 
-    # Initialize data collection containers
-    plot_data = {
-        "batch": {"indices": [], "loss": [], "accuracy": [], "cer": [], "wer": []},
-        "epoch": {
-            "numbers": [],
-            "sampling_prob": [],
-            "val_loss": [],
-            "val_accuracy": [],
-            "val_cer": [],
-            "val_wer": [],
-        },
-    }
+    # Plot Training and Validation metrics
+    if train_key in history_dict:
+        ax.plot(
+            epochs,
+            history_dict[train_key],
+            label=f"Training {y_label}",
+            color=colors["training"],
+            linestyle="-",
+        )
+    if val_key in history_dict:
+        ax.plot(
+            epochs,
+            history_dict[val_key],
+            label=f"Validation {y_label}",
+            color=colors["validation"],
+            linestyle="-",
+        )
+    ax.legend(loc="upper left")
 
-    current_batch_count = 0
+    # Secondary axis for Sampling Probability
+    if "sampling_probability" in history_dict:
+        ax2 = ax.twinx()
+        ax2.set_ylabel("Sampling Probability", fontsize=12, color=colors["text"])
+        ax2.plot(
+            epochs,
+            history_dict["sampling_probability"],
+            label="Sampling Probability",
+            color=colors["sampling_prob"],
+            linestyle=":",
+        )
+        ax2.tick_params(axis="y", labelcolor=colors["sampling_prob"])
+        ax2.legend(loc="upper right")
 
-    # Collect all data
-    for epoch_idx, epoch_data_dict in enumerate(epochs_data):
-        # Batch metrics
-        for batch_info in epoch_data_dict.get("batch_metrics", []):
-            plot_data["batch"]["indices"].append(current_batch_count)
-            plot_data["batch"]["loss"].append(batch_info.get("loss"))
-            plot_data["batch"]["accuracy"].append(batch_info.get("accuracy"))
-            plot_data["batch"]["cer"].append(batch_info.get("cer"))
-            plot_data["batch"]["wer"].append(batch_info.get("wer"))
-            current_batch_count += 1
+    ax.grid(True, which="both", linestyle="-", linewidth=0.5)
+    ax.set_xlim(left=0, right=len(epochs) + 1)  # Ensure x-axis starts at 0 and ends correctly
+    ax.set_xticks(epochs) # Set x-ticks to actual epoch numbers
 
-        # Epoch metrics
-        epoch_metrics = epoch_data_dict.get("epoch_metrics", {})
-        plot_data["epoch"]["numbers"].append(epoch_idx + 1)  # 1-based indexing
-        plot_data["epoch"]["sampling_prob"].append(epoch_metrics.get("sampling_probability"))
+    # Save the figure
+    safe_title = title.lower().replace(" ", "_").replace("(", "").replace(")", "")
+    file_name = f"{safe_title}.png"
+    output_path = os.path.join(output_dir, file_name)
 
-        # Validation metrics (use None if not available)
-        plot_data["epoch"]["val_loss"].append(epoch_metrics.get("val_loss"))
-        plot_data["epoch"]["val_accuracy"].append(epoch_metrics.get("val_accuracy"))
-        plot_data["epoch"]["val_cer"].append(epoch_metrics.get("val_cer"))
-        plot_data["epoch"]["val_wer"].append(epoch_metrics.get("val_wer"))
-
-    # Convert to numpy arrays
-    for key in plot_data["batch"]:
-        plot_data["batch"][key] = np.array(plot_data["batch"][key], dtype=np.float32)
-
-    for key in plot_data["epoch"]:
-        if key != "numbers":  # numbers should stay as integers
-            plot_data["epoch"][key] = np.array(plot_data["epoch"][key], dtype=np.float32)
-
-    # Calculate epoch boundaries for vertical lines
-    batches_per_epoch = len(epochs_data[0]["batch_metrics"]) if epochs_data else 0
-    epoch_boundaries = np.arange(
-        batches_per_epoch, len(plot_data["batch"]["indices"]), batches_per_epoch
-    )
-
-    # Create figure with more subplots
-    fig = plt.figure(figsize=(24, 18))
-    gs = fig.add_gridspec(3, 3)
-
-    # Batch metrics plots
-    ax1 = fig.add_subplot(gs[0, 0])  # Batch loss
-    ax2 = fig.add_subplot(gs[0, 1])  # Batch accuracy
-    ax3 = fig.add_subplot(gs[0, 2])  # Batch CER
-    ax4 = fig.add_subplot(gs[1, 0])  # Batch WER
-
-    # Epoch metrics plots
-    ax5 = fig.add_subplot(gs[1, 1])  # Sampling probability
-    ax6 = fig.add_subplot(gs[1, 2])  # Validation loss
-    ax7 = fig.add_subplot(gs[2, 0])  # Validation accuracy
-    ax8 = fig.add_subplot(gs[2, 1])  # Validation CER
-    ax9 = fig.add_subplot(gs[2, 2])  # Validation WER
-
-    # Plot batch metrics
-    def plot_with_epoch_lines(ax, x, y, title, ylabel, color):
-        ax.plot(x, y, color=color, alpha=0.7)
-        for boundary in epoch_boundaries:
-            ax.axvline(x=boundary, color="black", linestyle="--", alpha=0.3)
-        ax.set_title(title)
-        ax.set_xlabel("Batch Number")
-        ax.set_ylabel(ylabel)
-        ax.grid(True)
-
-    plot_with_epoch_lines(
-        ax1, plot_data["batch"]["indices"], plot_data["batch"]["loss"], "Batch Loss", "Loss", "blue"
-    )
-    plot_with_epoch_lines(
-        ax2,
-        plot_data["batch"]["indices"],
-        plot_data["batch"]["accuracy"],
-        "Batch Accuracy",
-        "Accuracy",
-        "green",
-    )
-    plot_with_epoch_lines(
-        ax3, plot_data["batch"]["indices"], plot_data["batch"]["cer"], "Batch CER", "CER", "orange"
-    )
-    plot_with_epoch_lines(
-        ax4, plot_data["batch"]["indices"], plot_data["batch"]["wer"], "Batch WER", "WER", "red"
-    )
-
-    # Plot epoch metrics
-    def plot_epoch_metric(ax, x, y, title, ylabel, color, marker="o"):
-        valid_indices = ~np.isnan(y)
-        if np.any(valid_indices):
-            ax.plot(x, y, color=color, marker=marker, linestyle="-")
-            ax.set_title(title)
-            ax.set_xlabel("Epoch")
-            ax.set_ylabel(ylabel)
-            ax.set_xticks(plot_data["epoch"]["numbers"])
-            ax.grid(True)
-        else:
-            ax.set_title(f"{title} (No Data)")
-            ax.text(0.5, 0.5, "No Data", ha="center", va="center", transform=ax.transAxes)
-
-    # Sampling probability
-    plot_epoch_metric(
-        ax5,
-        plot_data["epoch"]["numbers"],
-        plot_data["epoch"]["sampling_prob"],
-        "Sampling Probability Over Epochs",
-        "Probability",
-        "purple",
-    )
-
-    # Validation metrics
-    plot_epoch_metric(
-        ax6,
-        plot_data["epoch"]["numbers"],
-        plot_data["epoch"]["val_loss"],
-        "Validation Loss",
-        "Loss",
-        "darkred",
-    )
-    plot_epoch_metric(
-        ax7,
-        plot_data["epoch"]["numbers"],
-        plot_data["epoch"]["val_accuracy"],
-        "Validation Accuracy",
-        "Accuracy",
-        "darkgreen",
-    )
-    plot_epoch_metric(
-        ax8,
-        plot_data["epoch"]["numbers"],
-        plot_data["epoch"]["val_cer"],
-        "Validation CER",
-        "CER",
-        "darkorange",
-    )
-    plot_epoch_metric(
-        ax9,
-        plot_data["epoch"]["numbers"],
-        plot_data["epoch"]["val_wer"],
-        "Validation WER",
-        "WER",
-        "brown",
-    )
     plt.tight_layout()
-    return fig
+    plt.savefig(output_path, dpi=300)
+    plt.close(fig)  # Close the figure to free memory
+    print(f"Plot saved to: {output_path}")
+
+
+def plot_training_history(history: tf.keras.callbacks.History, output_dir: str) -> None:
+    """Generates and saves plots for various training metrics from a Keras History object.
+
+    Args:
+        history (tf.keras.callbacks.History): The Keras History object containing training logs.
+        output_dir (str): The directory where the plots will be saved.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    history_dict = history.history
+    epochs = np.arange(1, len(history_dict["loss"]) + 1)
+
+    # Plot and save each metric
+    plot_and_save_metric(
+        epochs,
+        history_dict,
+        "loss",
+        "val_loss",
+        "Model Loss",
+        "Loss",
+        output_dir,
+    )
+    plot_and_save_metric(
+        epochs,
+        history_dict,
+        "accuracy",
+        "val_accuracy",
+        "Model Accuracy",
+        "Accuracy",
+        output_dir,
+    )
+    plot_and_save_metric(
+        epochs,
+        history_dict,
+        "character_error_rate",
+        "val_character_error_rate",
+        "Character Error Rate (CER)",
+        "CER",
+        output_dir,
+    )
+    plot_and_save_metric(
+        epochs,
+        history_dict,
+        "word_error_rate",
+        "val_word_error_rate",
+        "Word Error Rate (WER)",
+        "WER",
+        output_dir,
+    )
