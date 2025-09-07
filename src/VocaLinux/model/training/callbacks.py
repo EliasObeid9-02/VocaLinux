@@ -1,14 +1,16 @@
 import json
 import os
 import time
+from typing import Optional
 
 import numpy as np
 import tensorflow as tf
 
+from VocaLinux.configs import training as training_config
+
 
 class HistoryCallback(tf.keras.callbacks.Callback):
-    """
-    A custom Keras callback to store training progress at both epoch and batch levels.
+    """A custom Keras callback to store training progress at both epoch and batch levels.
 
     Attributes:
         history (list): A list of dictionaries, where each dictionary represents an epoch.
@@ -21,8 +23,13 @@ class HistoryCallback(tf.keras.callbacks.Callback):
                                    active epoch in `self.history`.
     """
 
-    def __init__(self, batch_period: int = 100):
+    def __init__(
+        self,
+        filepath: str,
+        batch_period: int = training_config.BATCH_PERIOD,
+    ):
         super().__init__()
+        self.filepath = filepath
         self.history = []
         self.current_epoch_data = None
         self.total_training_time_seconds = 0.0
@@ -32,18 +39,13 @@ class HistoryCallback(tf.keras.callbacks.Callback):
         self.last_completed_epoch = -1
 
     def on_train_begin(self, logs=None):
-        """
-        Called at the beginning of training. Records the start time for total training duration.
-        """
+        """Called at the beginning of training. Records the start time for total training duration."""
         self._total_training_start_time = time.time()
 
         print("Model training using model.fit() has started.\n")
 
     def on_epoch_begin(self, epoch, logs=None):
-        """
-        Called at the beginning of each epoch. Initializes a new dictionary
-        for the current epoch's data.
-        """
+        """Called at the beginning of each epoch. Initializes a new dictionary for the current epoch's data."""
         self._epoch_start_time = time.time()
         self.current_epoch_data = {
             "epoch": epoch,
@@ -65,21 +67,15 @@ class HistoryCallback(tf.keras.callbacks.Callback):
         print(f"--- Start Epoch {epoch} ---")
 
     def on_train_end(self, logs=None):
-        """
-        Called at the end of training. Calculates the total training duration.
-        """
-        total_end_time = time.time()
-        self.total_training_time_seconds = total_end_time - self._total_training_start_time
-
+        """Called at the end of training. Calculates the total training duration and saves the history."""
+        self.total_training_time_seconds = time.time() - self._total_training_start_time
+        self._save_history()
         print(
             f"Model training using model.fit() has ended. Total time: {self.total_training_time_seconds:.2f}s\n"
         )
 
     def on_epoch_end(self, epoch, logs=None):
-        """
-        Called at the end of each epoch. Populates the epoch-level metrics
-        for the current epoch's data.
-        """
+        """Called at the end of each epoch. Populates the epoch-level metrics for the current epoch's data."""
         epoch_end_time = time.time()
         epoch_duration = f"{epoch_end_time - self._epoch_start_time:.2f}s"
         self.last_completed_epoch = epoch
@@ -106,7 +102,7 @@ class HistoryCallback(tf.keras.callbacks.Callback):
         wer = f"{epoch_metrics['wer']:.4f}"
 
         output_str = f"Time used: {epoch_duration}\n"
-        output_str += "--- Training Metrics ---\n"
+        output_str += "--- Training Metrics ---"
         output_str += f"\tLoss: {loss}, Accuracy: {acc}\n"
         output_str += f"\tCER:  {cer}, WER:      {wer}\n\n"
 
@@ -116,16 +112,14 @@ class HistoryCallback(tf.keras.callbacks.Callback):
             val_cer = f"{epoch_metrics['val_cer']:.4f}"
             val_wer = f"{epoch_metrics['val_wer']:.4f}"
 
-            output_str += "--- Validation Metrics ---\n"
+            output_str += "--- Validation Metrics ---"
             output_str += f"\tLoss: {val_loss}, Accuracy: {val_acc}\n"
             output_str += f"\tCER:  {val_cer}, WER:      {val_wer}"
         print(output_str)
         print(f"--- End   Epoch {epoch} ---\n")
 
     def on_train_batch_end(self, batch, logs=None):
-        """
-        Called at the end of each training batch. Stores batch-level loss and accuracy.
-        """
+        """Called at the end of each training batch. Stores batch-level loss and accuracy."""
         logs = logs or {}
         loss = logs.get("loss")
         acc = logs.get("accuracy")
@@ -146,38 +140,29 @@ class HistoryCallback(tf.keras.callbacks.Callback):
                 f"Processed {batch + 1} batches - Loss: {loss:.4f}, Accuracy: {acc:.4f}, CER: {cer:.4f}, WER: {wer:.4f}"
             )
 
-    def save_to_json(self, filepath: str):
-        """
-        Saves the collected history data to a JSON file.
-
-        Args:
-            filepath (str): The path to the file where the history should
-                            be saved with JSON extention (e.g., "training_history.json").
-        """
+    def _save_history(self):
+        """Saves the collected history data to the filepath."""
         data_to_save = {
             "epochs": self.history,
             "total_training_time_seconds": self.total_training_time_seconds,
             "last_completed_epoch": self.last_completed_epoch,
         }
         try:
-            with open(filepath, "w") as f:
+            with open(self.filepath, "w") as f:
                 json.dump(data_to_save, f, indent=4)
-            print(f"History saved successfully to {filepath}")
+            print(f"History saved successfully to {self.filepath}")
         except Exception as e:
-            print(f"Error saving history to {filepath}: {e}")
+            print(f"Error saving history to {self.filepath}: {e}")
 
 
 class ScheduledSamplingCallback(tf.keras.callbacks.Callback):
-    """
-    Keras Callback to linearly increase the sampling probability (probability of
-    using model's own prediction) during training.
-    """
+    """Keras Callback to linearly increase the sampling probability (probability of using model's own prediction) during training."""
 
     def __init__(
         self,
-        start_prob: float = 0.05,
-        end_prob: float = 0.8,
-        ramp_epochs: int = 260,
+        start_prob: float = training_config.SCHEDULED_SAMPLING_START_PROB,
+        end_prob: float = training_config.SCHEDULED_SAMPLING_END_PROB,
+        ramp_epochs: int = training_config.SCHEDULED_SAMPLING_RAMP_EPOCHS,
     ):
         super().__init__()
         self.current_prob = start_prob
@@ -215,12 +200,12 @@ class CyclicalLearningRateCallback(tf.keras.callbacks.Callback):
 
     def __init__(
         self,
-        min_lr,
-        max_lr,
-        lr_decay=1,
-        cycle_length=10,
-        mult_factor=1,
-        load_file=None,
+        min_lr: float = training_config.CYCLICAL_LR_MIN_LR,
+        max_lr: float = training_config.CYCLICAL_LR_MAX_LR,
+        lr_decay: int = training_config.CYCLICAL_LR_DECAY,
+        cycle_length: int = training_config.CYCLICAL_LR_CYCLE_LENGTH,
+        mult_factor: int = training_config.CYCLICAL_LR_MULT_FACTOR,
+        load_file: Optional[str] = None,
         save_file="clr_state.json",
     ):
         super().__init__()
