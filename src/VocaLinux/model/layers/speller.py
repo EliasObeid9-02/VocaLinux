@@ -1,15 +1,16 @@
-from typing import List
+from typing import List, Tuple
 
 import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Dense, Embedding, Layer, LayerNormalization
 
 from VocaLinux.model.layers.attention import LocationAwareAttention
-from VocaLinux.model.vocabulary import EOS_TOKEN, SOS_TOKEN
+from VocaLinux.model.vocabulary import Vocabulary
+
+vocabulary = Vocabulary()
 
 
 class Speller(Layer):
-    """
-    The Speller is an attention-based recurrent neural network decoder that
+    """The Speller is an attention-based recurrent neural network decoder that
     emits characters as outputs, forming the second core component of the
     Listen, Attend and Spell (LAS) model. It takes the high-level features
     from the Listener and generates a probability distribution over character
@@ -26,9 +27,8 @@ class Speller(Layer):
         sampling_probability: float,
         beam_width: int,
         name: str = "speller",
-    ):
-        """
-        Initializes the Speller layer.
+    ) -> None:
+        """Initializes the Speller layer.
 
         Args:
             lstm_units (int): Number of units for each LSTM layer in the decoder.
@@ -39,6 +39,7 @@ class Speller(Layer):
             sampling_probability (float): The probability of using the model's own
                                           prediction as the next input during training
                                           (scheduled sampling).
+            beam_width (int): The beam width for beam search decoding.
             name (str): The name of the layer.
         """
         super().__init__(name=name)
@@ -59,16 +60,25 @@ class Speller(Layer):
         )
 
     @property
-    def sampling_probability(self):
+    def sampling_probability(self) -> float:
+        """Returns the current scheduled sampling probability.
+
+        Returns:
+            float: The current sampling probability.
+        """
         return self._sampling_probability.numpy().item()
 
     @sampling_probability.setter
-    def sampling_probability(self, value):
+    def sampling_probability(self, value: float) -> None:
+        """Sets the scheduled sampling probability.
+
+        Args:
+            value (float): The new sampling probability.
+        """
         self._sampling_probability.assign(value)
 
-    def build(self, input_shape: List[tf.TensorShape]):
-        """
-        Builds the Speller layer by creating its sub-layers and initializing weights.
+    def build(self, input_shape: List[tf.TensorShape]) -> None:
+        """Builds the Speller layer by creating its sub-layers and initializing weights.
 
         Args:
             input_shape (List[tf.TensorShape]): A list containing two TensorFlow TensorShapes:
@@ -136,12 +146,12 @@ class Speller(Layer):
         self,
         prev_char_embedding: tf.Tensor,
         prev_context: tf.Tensor,
+        prev_attention_weights: tf.Tensor,
         decoder_lstm_hidden_states: tf.Tensor,
         decoder_lstm_cell_states: tf.Tensor,
         encoder_outputs: tf.Tensor,
-    ):
-        """
-        Performs a single step of the Speller's decoding process.
+    ) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+        """Performs a single step of the Speller's decoding process.
         This function is designed to be used within tf.scan for iterative decoding.
 
         Args:
@@ -149,6 +159,8 @@ class Speller(Layer):
                                              Shape: (batch_size, embedding_dim)
             prev_context (tf.Tensor): The context vector from the previous time step.
                                       Shape: (batch_size, encoder_feature_dim)
+            prev_attention_weights (tf.Tensor): The attention weights from the previous time step.
+                                                Shape: (batch_size, U)
             decoder_lstm_hidden_states (tf.Tensor): Stacked hidden states of all decoder LSTM layers
                                                     from the previous time step.
                                                     Shape: (num_decoder_lstm_layers, batch_size, lstm_units)
@@ -159,11 +171,13 @@ class Speller(Layer):
                                          Shape: (batch_size, U, encoder_feature_dim)
 
         Returns:
-            Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]: A tuple containing:
-                - logits (tf.Tensor): Logits (unnormalized log-probabilities) for the current
-                                      character prediction. Shape: (batch_size, output_vocab_size)
+            Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]: A tuple containing:
+                - softmax_probabilities (tf.Tensor): Softmax probabilities for the current
+                                                     character prediction. Shape: (batch_size, output_vocab_size)
                 - current_context_output (tf.Tensor): The newly computed context vector for the current time step.
                                                       Shape: (batch_size, encoder_feature_dim)
+                - current_attention_weights (tf.Tensor): The newly computed attention weights for the current time step.
+                                                         Shape: (batch_size, U)
                 - new_decoder_lstm_hidden_states (tf.Tensor): Stacked new hidden states for all LSTM layers.
                                                               Shape: (num_decoder_lstm_layers, batch_size, lstm_units)
                 - new_decoder_lstm_cell_states (tf.Tensor): Stacked new cell states for all LSTM layers.
@@ -216,12 +230,12 @@ class Speller(Layer):
             tf.stack(new_decoder_lstm_cell_states),
         )
 
-    def _greedy_decode(self, encoder_outputs, max_decode_len):
+    def _greedy_decode(self, encoder_outputs: tf.Tensor, max_decode_len: tf.Tensor) -> tf.Tensor:
         """Performs greedy decoding for inference."""
         batch_size = tf.shape(encoder_outputs)[0]
 
         # Initialize with <sos> token
-        decoded_sequence = tf.ones((batch_size, 1), dtype=tf.int32) * SOS_TOKEN
+        decoded_sequence = tf.ones((batch_size, 1), dtype=tf.int32) * vocabulary.SOS_TOKEN
 
         # Initial decoder states and context
         decoder_states = [
@@ -231,7 +245,7 @@ class Speller(Layer):
         context_vector = tf.zeros((batch_size, tf.shape(encoder_outputs)[-1]))
         attention_weights = tf.zeros((batch_size, tf.shape(encoder_outputs)[1]))
 
-        for t in range(max_decode_len):
+        for t in tf.range(max_decode_len):
             last_token = decoded_sequence[:, -1]
             char_embedding = self.embedding(last_token)
 
@@ -263,12 +277,12 @@ class Speller(Layer):
 
         return decoded_sequence
 
-    def _beam_decode(self, encoder_outputs, max_decode_len):
+    def _beam_decode(self, encoder_outputs: tf.Tensor, max_decode_len: tf.Tensor) -> tf.Tensor:
         """Performs beam search decoding using the class's beam_width."""
         batch_size = tf.shape(encoder_outputs)[0]
 
         # Initialize beams, scores, and states
-        beams = tf.ones((batch_size, self.beam_width, 1), dtype=tf.int32) * SOS_TOKEN
+        beams = tf.ones((batch_size, self.beam_width, 1), dtype=tf.int32) * vocabulary.SOS_TOKEN
 
         initial_scores = tf.constant(
             [[0.0] + [-float("inf")] * (self.beam_width - 1)], shape=(1, self.beam_width)
@@ -293,10 +307,10 @@ class Speller(Layer):
             (batch_size * self.beam_width, tf.shape(flat_encoder_outputs)[1])
         )
 
-        for t in range(max_decode_len):
+        for t in tf.range(max_decode_len):
             last_tokens = tf.reshape(beams[:, :, -1], [-1])
 
-            if tf.reduce_all(tf.equal(last_tokens, EOS_TOKEN)):
+            if tf.reduce_all(tf.equal(last_tokens, vocabulary.EOS_TOKEN)):
                 break
 
             char_embedding = self.embedding(last_tokens)
@@ -358,8 +372,7 @@ class Speller(Layer):
         return beams[:, 0, :]
 
     def call(self, inputs: List[tf.Tensor], training: bool = False) -> tf.Tensor:
-        """
-        Performs the forward pass of the Speller layer, generating character sequences.
+        """Performs the forward pass of the Speller layer, generating character sequences.
 
         During training, it uses scheduled sampling to decide whether to use the
         ground truth previous character or the model's own prediction as input
@@ -411,8 +424,7 @@ class Speller(Layer):
         )
 
         def scan_fn(state, current_time_step_idx):
-            """
-            The scan function that defines the computation for each time step.
+            """The scan function that defines the computation for each time step.
             This function is passed to tf.scan and iteratively updates the decoder state.
 
             Args:
@@ -432,8 +444,7 @@ class Speller(Layer):
                 decoder_lstm_cell_states_scan,
             ) = state
 
-            """
-            Determine which character ID to use for embedding in the current step:
+            """Determine which character ID to use for embedding in the current step:
             - If in training mode:
             - If it's not the very first time step (current_time_step_idx > 0) AND
             - A random uniform number is less than self.sampling_probability (scheduled sampling):
@@ -465,8 +476,7 @@ class Speller(Layer):
 
             prev_char_embedding = self.embedding(char_id_for_embedding)
 
-            """
-            Returns the following
+            """Returns the following:
                 logits,
                 current_context_output,
                 current_attention_weights,
@@ -494,8 +504,8 @@ class Speller(Layer):
         return final_outputs
 
     def get_config(self):
-        """
-        Returns the serializable configuration of the layer.
+        """Returns the serializable configuration of the layer.
+
         This allows the layer to be recreated from its configuration, which is
         important for saving and loading models.
 
@@ -516,8 +526,7 @@ class Speller(Layer):
         return config
 
     def compute_output_shape(self, input_shape: List[tf.TensorShape]) -> tf.TensorShape:  # type: ignore
-        """
-        Computes the output shape of the Speller layer given the input shapes.
+        """Computes the output shape of the Speller layer given the input shapes.
 
         Args:
             input_shape (List[tf.TensorShape]): A list containing two TensorFlow TensorShapes:

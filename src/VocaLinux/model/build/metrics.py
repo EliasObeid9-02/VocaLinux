@@ -7,7 +7,9 @@ which are crucial for assessing the performance of speech recognition models.
 import jiwer
 import tensorflow as tf
 
-from VocaLinux.model.vocabulary import ids_to_text
+from VocaLinux.model.vocabulary import Vocabulary
+
+vocabulary = Vocabulary()
 
 
 class CharacterErrorRate(tf.keras.metrics.Metric):
@@ -41,8 +43,8 @@ class CharacterErrorRate(tf.keras.metrics.Metric):
 
         def compute_cer(true_ids: tf.Tensor, pred_ids: tf.Tensor) -> tf.Tensor:
             """Computes CER for a single sample using numpy operations."""
-            true_text = ids_to_text(true_ids.numpy())
-            pred_text = ids_to_text(pred_ids.numpy())
+            true_text = vocabulary.ids_to_text(true_ids.numpy())
+            pred_text = vocabulary.ids_to_text(pred_ids.numpy())
             return tf.constant(jiwer.cer(true_text, pred_text), dtype=tf.float32)
 
         cer_scores = tf.map_fn(
@@ -98,8 +100,8 @@ class WordErrorRate(tf.keras.metrics.Metric):
 
         def compute_wer(true_ids: tf.Tensor, pred_ids: tf.Tensor) -> tf.Tensor:
             """Computes WER for a single sample using numpy operations."""
-            true_text = ids_to_text(true_ids.numpy())
-            pred_text = ids_to_text(pred_ids.numpy())
+            true_text = vocabulary.ids_to_text(true_ids.numpy())
+            pred_text = vocabulary.ids_to_text(pred_ids.numpy())
             return tf.constant(jiwer.wer(true_text, pred_text), dtype=tf.float32)
 
         wer_scores = tf.map_fn(

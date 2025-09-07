@@ -2,7 +2,9 @@
 
 import tensorflow as tf
 
-from VocaLinux.model.vocabulary import PAD_TOKEN
+from VocaLinux.model.vocabulary import Vocabulary
+
+vocabulary = Vocabulary()
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -35,7 +37,7 @@ def safe_sparse_categorical_crossentropy(
     negative_log_likelihood = -true_class_log_probs
 
     # Mask out padding tokens
-    mask = tf.math.not_equal(y_true_int, PAD_TOKEN)
+    mask = tf.math.not_equal(y_true_int, vocabulary.PAD_TOKEN)
     mask = tf.cast(mask, dtype=negative_log_likelihood.dtype)
     masked_loss = negative_log_likelihood * mask
 

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 import tensorflow as tf
 from tensorflow.keras import Model
@@ -6,11 +6,12 @@ from tensorflow.keras import Model
 from VocaLinux.configs import model as model_config
 from VocaLinux.model.layers.listener import Listener
 from VocaLinux.model.layers.speller import Speller
+from VocaLinux.model.vocabulary import Vocabulary
 
 
 class LASModel(Model):
-    """
-    The complete Listen, Attend and Spell (LAS) model.
+    """The complete Listen, Attend and Spell (LAS) model.
+
     This model combines the Listener (encoder) and Speller (decoder) components
     for end-to-end speech recognition.
     """
@@ -19,15 +20,16 @@ class LASModel(Model):
         self,
         name: str = "las_model",
         **kwargs,
-    ):
-        """
-        Initializes the LASModel.
+    ) -> None:
+        """Initializes the LASModel.
 
         Args:
             name (str): Name of the model.
             **kwargs: Additional keyword arguments for the Model base class.
         """
         super().__init__(name=name, **kwargs)
+
+        self.vocabulary = Vocabulary()
 
         self.listener = Listener(
             lstm_units=model_config.LISTENER_LSTM_UNITS,
@@ -39,7 +41,7 @@ class LASModel(Model):
             lstm_units=model_config.SPELLER_LSTM_UNITS,
             num_decoder_lstm_layers=model_config.NUM_DECODER_LSTM_LAYERS,
             attention_units=model_config.ATTENTION_UNITS,
-            output_vocab_size=model_config.OUTPUT_VOCAB_SIZE,
+            output_vocab_size=self.vocabulary.VOCAB_SIZE,
             embedding_dim=model_config.EMBEDDING_DIM,
             sampling_probability=model_config.SAMPLING_PROBABILITY,
             beam_width=model_config.BEAM_WIDTH,
@@ -47,8 +49,7 @@ class LASModel(Model):
         )
 
     def call(self, inputs: List[tf.Tensor], training: bool = False) -> tf.Tensor:  # type: ignore
-        """
-        Performs the forward pass of the LASModel.
+        """Performs the forward pass of the LASModel.
 
         Args:
             inputs (List[tf.Tensor]): A list containing two tensors:
@@ -67,10 +68,16 @@ class LASModel(Model):
         character_logits = self.speller([encoded_features, target_sequences], training=training)
         return character_logits
 
-    def greedy_predict(self, mel_spectrograms):
-        """
-        Performs greedy decoding for inference with a dynamic length cap
-        based on the input audio length.
+    def greedy_predict(self, mel_spectrograms: tf.Tensor) -> tf.Tensor:
+        """Performs greedy decoding for inference with a dynamic length cap based on the input audio length.
+
+        Args:
+            mel_spectrograms (tf.Tensor): Batches of audio samples.
+                                          Shape: (batch_size, max_mel_frames, n_mels)
+
+        Returns:
+            tf.Tensor: The predicted sequence of character IDs.
+                       Shape: (batch_size, predicted_sequence_length)
         """
         input_len = tf.shape(mel_spectrograms)[1]
 
@@ -81,10 +88,18 @@ class LASModel(Model):
         encoder_outputs = self.listener(mel_spectrograms, training=False)
         return self.speller._greedy_decode(encoder_outputs, max_decode_len)
 
-    def beam_search_predict(self, mel_spectrograms):
+    def beam_search_predict(self, mel_spectrograms: tf.Tensor) -> tf.Tensor:
         """
         Performs beam search decoding with a dynamic length cap
         based on the input audio length.
+
+        Args:
+            mel_spectrograms (tf.Tensor): Batches of audio samples.
+                                          Shape: (batch_size, max_mel_frames, n_mels)
+
+        Returns:
+            tf.Tensor: The predicted sequence of character IDs using beam search.
+                       Shape: (batch_size, predicted_sequence_length)
         """
         input_len = tf.shape(mel_spectrograms)[1]
 
@@ -95,7 +110,14 @@ class LASModel(Model):
         encoder_outputs = self.listener(mel_spectrograms, training=False)
         return self.speller._beam_decode(encoder_outputs, max_decode_len)
 
-    def get_config(self):
+    def get_config(self) -> Dict[str, Any]:
+        """Returns a dictionary of the model's configuration parameters.
+
+        This allows the model to be serialized and deserialized.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the configuration of the model.
+        """
         config = super().get_config()
         config.update(
             {
