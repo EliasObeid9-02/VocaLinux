@@ -1,14 +1,13 @@
-"""This module provides utilities for building and rebuilding the Listen, Attend, and Spell (LAS) model.
+"""This module provides utilities for building, rebuilding, and loading the Listen, Attend, and Spell (LAS) model.
 
-It includes functions to create a new model from scratch and to recompile an existing model,
-resetting its optimizer state.
+It includes functions to create a new model from scratch, to recompile an existing model,
+resetting its optimizer state, and to load a previously saved model from a file.
 """
 
 from typing import cast
 import tensorflow as tf
 
-from VocaLinux.configs import dataset as dataset_config
-from VocaLinux.configs import training as training_config
+from VocaLinux.configs import training as training_config, dataset as dataset_config
 from VocaLinux.model.build.loss import safe_sparse_categorical_crossentropy
 from VocaLinux.model.build.metrics import CharacterErrorRate, WordErrorRate
 from VocaLinux.model.las_model import LASModel
@@ -33,7 +32,8 @@ def _compile_model(model: LASModel) -> None:
 
     loss = safe_sparse_categorical_crossentropy
     optimizer = tf.keras.optimizers.Adam(
-        learning_rate=training_config.LEARNING_RATE, clipnorm=training_config.GRAD_CLIP_NORM
+        learning_rate=training_config.LEARNING_RATE,
+        clipnorm=training_config.GRAD_CLIP_NORM,
     )
 
     model.compile(
