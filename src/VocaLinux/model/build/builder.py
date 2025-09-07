@@ -4,7 +4,7 @@ It includes functions to create a new model from scratch, to recompile an existi
 resetting its optimizer state, and to load a previously saved model from a file.
 """
 
-from typing import cast
+from typing import cast, Optional
 import tensorflow as tf
 
 from VocaLinux.configs import training as training_config, dataset as dataset_config
@@ -13,7 +13,7 @@ from VocaLinux.model.build.metrics import CharacterErrorRate, WordErrorRate
 from VocaLinux.model.las_model import LASModel
 
 
-def _compile_model(model: LASModel) -> None:
+def _compile_model(model: LASModel, strategy: Optional[tf.distribute.Strategy] = None) -> None:
     """Compiles the given LASModel with the specified optimizer, loss, and metrics.
 
     This is a private helper function used by both `create_model_from_scratch`
@@ -21,7 +21,29 @@ def _compile_model(model: LASModel) -> None:
 
     Args:
         model (LASModel): The LASModel instance to compile.
+        strategy (Optional[tf.distribute.Strategy]): The distribution strategy to use for compilation.
     """
+    def compile_fn():
+        loss = safe_sparse_categorical_crossentropy
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate=training_config.LEARNING_RATE,
+            clipnorm=training_config.GRAD_CLIP_NORM,
+        )
+        model.compile(
+            loss=loss,
+            optimizer=optimizer,
+            metrics=[
+                "accuracy",
+                CharacterErrorRate(),
+                WordErrorRate(),
+            ],
+        )
+
+    if strategy:
+        with strategy.scope():
+            compile_fn()
+    else:
+        compile_fn()
 
     _ = model(
         [
@@ -30,67 +52,50 @@ def _compile_model(model: LASModel) -> None:
         ]
     )
 
-    loss = safe_sparse_categorical_crossentropy
-    optimizer = tf.keras.optimizers.Adam(
-        learning_rate=training_config.LEARNING_RATE,
-        clipnorm=training_config.GRAD_CLIP_NORM,
-    )
 
-    model.compile(
-        loss=loss,
-        optimizer=optimizer,
-        metrics=[
-            "accuracy",
-            CharacterErrorRate(),
-            WordErrorRate(),
-        ],
-    )
-
-
-def create_model_from_scratch() -> LASModel:
+def create_model_from_scratch(strategy: Optional[tf.distribute.Strategy] = None) -> LASModel:
     """Creates and compiles a new Listen, Attend, and Spell (LAS) model from scratch.
 
-    The model is initialized with configurations from `VocaLinux.configs.model`
-    and compiled with an Adam optimizer, a custom learning rate schedule,
-    `safe_sparse_categorical_crossentropy` loss, and `CharacterErrorRate`
-    and `WordErrorRate` metrics.
+    Args:
+        strategy (Optional[tf.distribute.Strategy]): The distribution strategy to use for compilation.
 
     Returns:
         LASModel: A newly created and compiled LAS model.
     """
-    model = LASModel()
-    model = cast(LASModel, model)  # Explicit cast for type checker
-    _compile_model(model)
+    def model_fn():
+        return LASModel()
+
+    if strategy:
+        with strategy.scope():
+            model = model_fn()
+    else:
+        model = model_fn()
+
+    model = cast(LASModel, model)
+    _compile_model(model, strategy)
     return model
 
 
-def rebuild_model(model: LASModel) -> LASModel:
+def rebuild_model(model: LASModel, strategy: Optional[tf.distribute.Strategy] = None) -> LASModel:
     """Recompiles an existing Listen, Attend, and Spell (LAS) model.
-
-    This method takes an already instantiated LAS model, recompiles it with
-    the standard optimizer, loss, and metrics, effectively resetting the
-    optimizer's state. This is useful for continuing training with a fresh
-    optimizer state or applying new compilation settings.
 
     Args:
         model (LASModel): The existing LASModel instance to rebuild.
+        strategy (Optional[tf.distribute.Strategy]): The distribution strategy to use for compilation.
 
     Returns:
         LASModel: The recompiled LAS model.
     """
-    _compile_model(model)
+    _compile_model(model, strategy)
     return model
 
 
-def load_model_from_file(filepath: str) -> LASModel:
+def load_model_from_file(filepath: str, strategy: Optional[tf.distribute.Strategy] = None) -> LASModel:
     """Loads and compiles a Listen, Attend, and Spell (LAS) model from a saved file.
-
-    The loaded model is recompiled with the standard optimizer, loss, and metrics,
-    ensuring it's ready for further training or evaluation. Custom objects
-    (loss functions, metrics, and learning rate schedules) are handled during loading.
 
     Args:
         filepath (str): The absolute path to the saved model file.
+        strategy (Optional[tf.distribute.Strategy]): The distribution strategy to use for compilation.
 
     Returns:
         LASModel: The loaded and recompiled LAS model.
@@ -101,7 +106,16 @@ def load_model_from_file(filepath: str) -> LASModel:
         "CharacterErrorRate": CharacterErrorRate,
         "WordErrorRate": WordErrorRate,
     }
-    loaded_model = tf.keras.models.load_model(filepath, custom_objects=custom_objects)
+
+    def load_fn():
+        return tf.keras.models.load_model(filepath, custom_objects=custom_objects)
+
+    if strategy:
+        with strategy.scope():
+            loaded_model = load_fn()
+    else:
+        loaded_model = load_fn()
+
     loaded_model = cast(LASModel, loaded_model)
-    _compile_model(loaded_model)
+    _compile_model(loaded_model, strategy)
     return loaded_model
