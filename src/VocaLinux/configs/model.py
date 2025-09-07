@@ -1,7 +1,4 @@
-"""
-This file contains the configuration for the LAS model.
-"""
-from VocaLinux.model.vocabulary import VOCAB_SIZE
+"""This file contains the configuration for the LAS model."""
 
 # Listener (Encoder) parameters
 LISTENER_LSTM_UNITS = 256
@@ -14,6 +11,3 @@ ATTENTION_UNITS = 512
 EMBEDDING_DIM = 256
 SAMPLING_PROBABILITY = 0.1
 BEAM_WIDTH = 32
-
-# Vocabulary size
-OUTPUT_VOCAB_SIZE = VOCAB_SIZE

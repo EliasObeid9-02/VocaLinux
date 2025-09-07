@@ -1,5 +1,5 @@
-"""
-This module contains the configuration for the interpreter.
+"""This module contains the configuration for the interpreter.
+
 It includes the vocabulary and mappings used for translating spoken words into text.
 """
 
@@ -63,9 +63,7 @@ DIGIT_WORDS: Dict[str, str] = {
 }
 
 VOCABULARY: List[str] = (
-    list(PHONETIC_ALPHABET.keys())
-    + list(SPECIAL_CHARS.keys())
-    + list(DIGIT_WORDS.keys())
+    list(PHONETIC_ALPHABET.keys()) + list(SPECIAL_CHARS.keys()) + list(DIGIT_WORDS.keys())
 )
 
 MAPPINGS: Dict[str, str] = {
