@@ -20,9 +20,9 @@ EARLY_STOPPING_PATIENCE = 10
 USE_CYCLICAL_LR = False  # Set to True to enable Cyclical LR
 CYCLICAL_LR_MIN_LR = 1e-5
 CYCLICAL_LR_MAX_LR = 1e-3
-CYCLICAL_LR_DECAY = 1.0  # Factor by which max_lr is multiplied at the end of each cycle
+CYCLICAL_LR_DECAY = 1  # Factor by which max_lr is multiplied at the end of each cycle
 CYCLICAL_LR_CYCLE_LENGTH = 10  # Number of epochs in a cycle
-CYCLICAL_LR_MULT_FACTOR = 1.0  # Factor by which cycle_length is multiplied at the end of each cycle
+CYCLICAL_LR_MULT_FACTOR = 1  # Factor by which cycle_length is multiplied at the end of each cycle
 
 # Dataset parameters
 TRAIN_SPLIT = "train-clean-100"
